@@ -4,7 +4,12 @@ CC = c++
 CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address -std=c++98
 RM = rm -f
 
-FILE =	src/main \
+FILE =	src/main			\
+		src/Config			\
+		src/Route			\
+		src/Server			\
+		src/Utils			\
+		src/ServerException	\
 
 SRCS = $(addsuffix .cpp, $(FILE))
 OBJS = $(addsuffix .o, $(FILE))

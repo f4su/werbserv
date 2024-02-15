@@ -1,12 +1,27 @@
-#include <iostream>
 #include <sys/socket.h>
 #include <sys/errno.h>
 #include <sys/errno.h>
 #include <sys/select.h>
 #include <netinet/in.h>
 #include <fstream>
+#include "../inc/idk.hpp"
 
-std::string FileToString(std::istream& file)
+int main(int argc, char **argv) 
+{
+    std::string configPath;
+    if (argc != 2)
+        configPath = "./test";
+    else
+        configPath = argv[1];
+    try {
+        Config::parse(configPath);
+        std::vector<Server> servers = Config::getServers();
+	}catch (ServerException &e) {
+		std::cout << "Nop\n";
+    }
+}
+
+/*std::string FileToString(std::istream& file)
 {
     std::string str;
     char c;
@@ -104,4 +119,4 @@ int main(int argc, char **argv)
 		}
 	}
 	return (0);
-}
+}*/
