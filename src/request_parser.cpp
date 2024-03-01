@@ -6,7 +6,7 @@
 #include	"../inc/Utils.hpp"
 
 #define	MAX_REQUEST_SIZE 
-#define	REQUEST_MIN_LINES 2
+#define	REQUEST_MIN_LINES 3		//start-line, header, /r/n
 
 using	std::cout;
 using	std::vector;
@@ -28,72 +28,94 @@ bool	invalid_chars(const string &path){
 	return (false);
 }
 
+bool	invalid_port(const string &port, URI &rq_uri){
+	//Ports are store in 16bits. Therefore, 65,536 ports available	0 - 65535
+	std::stringstream ss(port); 
+	int num;
 
-bool	invalid_authority(const string &auth, URI &rq_uri){
-	//Authority is composed by:	userinfo	@	host	: port
-	//We are not going to deal with userinfo
-	size_t	host_start = auth.find('@');
-	size_t	host_end = auth.find_last_of(':');
-
-	if (host_start == auth.size() || host_end == auth.size()){
+	if (port.find_first_not_of("0123456789") != string::npos){
 		return (true);
 	}
-
-	if (host_start == string::npos){
-		host_start = 0;
-	}
-	else {
-		host_start += 1;
-	}
-
-	if (host_end == string::npos){
-		host_end = auth.size();
-	}
-	else {
-		string::const_iterator it;
-		for (it = auth.begin() + host_end + 1; it != auth.end(); ++it){
-			if (*it < 48 || *it > 57){
-				return (true);
-			}
+	if (ss >> num) { 
+		if (num >= 65536){
+			return (true);
 		}
-		rq_uri.setPort(auth.substr(host_end + 1, auth.size()));
 	}
-	rq_uri.setHost(auth.substr(host_start, host_end));
+	else {
+			return (true);
+	}
+	rq_uri.setPort(num);
+	return (false);
+}
+
+bool	invalid_authority(const string &auth, URI &rq_uri){
+	//Authority is composed by:	host : port
+	size_t	host_end = auth.find_last_of(':');
+	size_t	ipV6in = auth.find("[");
+	size_t	ipV6out = auth.find("]");
+	
+	if (auth.size() < 1 || auth.front() == ':' ||
+			(ipV6in != string::npos && auth.size() < 3) ||
+			(ipV6in != string::npos && ipV6in != 0) ||
+			(ipV6out != string::npos && ipV6out != auth.size() -1) ||
+			(ipV6in != string::npos && ipV6out == string::npos) ||
+			(ipV6in == string::npos && ipV6out != string::npos)) {
+		return (true);
+	}
+	if (host_end == string::npos || auth.back() == ':'){
+		host_end = auth.size();
+		rq_uri.setPort(80);
+	}
+	else {
+		if (invalid_port(auth.substr(host_end + 1, auth.size()), rq_uri)){
+			cout << "Invalid port\n";
+			return (true);
+		}
+	}
+	ipV6in != string::npos ? rq_uri.setHost(auth.substr(1, --host_end)) :
+		rq_uri.setHost(auth.substr(0, host_end));
 	return (false);
 }
 
 bool	invalid_query_syntax(const string &query, URI &rq_uri){
 	//We will only accept & as separator for keys and values
-	if (query.find("&&") != string::npos || query.find("==") != string::npos){
+	cout << "Query iss xxxx> " << query << "\n";
+	if (query.size() <= 3 || query[0] != '?' || query.find("&&") != string::npos || query.find("==") != string::npos){
 		return (true);
 	}
-	std::vector<std::string>	params = ft_split(query, "&");
+	std::vector<std::string>	params;
+	params = ft_split(query.substr(1, query.size()), "&");
 	std::vector<std::string>::const_iterator it;
 	std::map<string, string>	prms;
 	for (it = params.begin(); it != params.end(); ++it){
 		std::vector<std::string>	pairs = ft_split(*it, "=");
+		cout << "kkkkkkkkkk ---> " << *it << "\n";
 		if (pairs.size() != 2){
 			return (true);
 		}
+		cout << "pair 0 )))> " << pairs[0] << "\npair 1 )))> " << pairs[1] << "\n";
 		prms.insert(std::make_pair(pairs[0], pairs[1]));
 	}
 	rq_uri.setParams(prms);
+	cout << rq_uri;
 	return (false);
 }
 
 bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_start, size_t f_start, char *form){
 
 	//Authority (optinal) must begin with // and end with /, ?, # or the end of the URI. It doesn't appear in origin form
-	if ((*form == 'a' || *form == 'y') && p_start !=  string::npos){
-		//Shortest authority possible:		http://a/			//a/
-		//		 i													012345678			0123
-		int	lenght = 0;
-		*form == 'a' ? lenght = 7 : *form == 'y' ? lenght = 2 : lenght = 0;
-		if (lenght > 0){
-			rq_uri.setAuthority(token.substr(lenght, p_start - lenght));
+	if ((*form == 'a' && p_start !=  string::npos) ||
+			(*form == 'y')){
+		//Shortest authority possible:		http://a/			a
+		if (*form == 'a'){
+			rq_uri.setAuthority(token.substr(7, p_start - 7));
 		}
+		else{
+			rq_uri.setAuthority(token);
+		}
+		cout << "Authority iss -> " << rq_uri.getAuthority() << "\n";
 		//check auth syntax & port
-		if (lenght == 0 || invalid_authority(rq_uri.getAuthority(), rq_uri)){
+		if (invalid_authority(rq_uri.getAuthority(), rq_uri)){
 			cout << "\n\tRequest error: Invalid URI authority syntax\n";
 			return (true);
 		}
@@ -111,19 +133,15 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 			rq_uri.setPath(token.substr(p_start, token.size() - p_start));
 		}
 	}
-	else {
+	else if (*form != 'y') {
 		cout << "\n\tRequest error: URI without path\n";
 		return (true);
 	}
 
 	//Params/Query (optional) must begin with a ? and end with # or the end of the URI. It's only applicable in absolute form
 	if (pr_start != string::npos){
-		if (f_start != string::npos){
-			rq_uri.setQuery(token.substr(pr_start, f_start - pr_start - 1));
-		}
-		else{
-			rq_uri.setQuery(token.substr(p_start, token.size() - pr_start - 1));
-		}
+		f_start != string::npos ? rq_uri.setQuery(token.substr(pr_start, f_start - pr_start - 1)) :
+			rq_uri.setQuery(token.substr(pr_start, token.size() - pr_start - 1));
 		//check params syntax
 		if (invalid_query_syntax(rq_uri.getQuery(), rq_uri))
 		{
@@ -142,20 +160,20 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 void	determine_uri_form(const string &uri, char *form){
 	//Asterisk	Form must begin with * and cannot be performed with GET, POST or DELETE methods
 	//Origin 		Form begins with /
-	//Authority	Form must start with //
+	//Authority	Form must start with the IP/Domain Name
 	//Absolute	Form must have http://	(we are going to implement only http scheme)
 
 	if (uri.find("http://") == 0){
 		*form = 'a';
 	}
-	else if (uri.find("//") == 0){
-		*form = 'y';
-	}
 	else if (uri[0] == '/'){
 		*form = 'o';
 	}
-	else {
+	else if (uri[0] == '*'){
 		*form = 'u';
+	}
+	else {
+		*form = 'y';
 	}
 }
 
@@ -165,6 +183,7 @@ bool	invalid_uri(const string &token, URI &rq_uri){
 		return (true);
 	}
 
+	cout << "URI to check is: [" << token << "]\n";
 	//We need to determine the URI form: origin (o), absolute (a), authority (y) or asterisk
 	char	form = 'u'; //u = undefined
 	determine_uri_form(token, &form);
@@ -182,7 +201,7 @@ bool	invalid_uri(const string &token, URI &rq_uri){
 	if (form == 'a'){
 		//Shortest absolute form: "http:///", 8 chars
 		//Scheme must be http (we aren't going to implement HTTP) and end with : before a backslash
-		if (token.size() < 8 || token.compare(0, 6, "http://") != 0){
+		if (token.size() < 8 || token.compare(0, 7, "http://") != 0){
 			cout << "\n\tRequest error: Invalid URI scheme\n";
 			return (true);
 		}
@@ -192,22 +211,17 @@ bool	invalid_uri(const string &token, URI &rq_uri){
 		params_start = token.find("?", 8);
 		frag_start = token.find("#", 8);
 
-		/*if (invalid_absolute_form(token, rq_uri)){
-			return (true);
-		}*/
 	}
 
 	//Parsing Authority Form
 	else if (form == 'y'){
-		//Shortest absolute form: "//a/", 4 chars
+		cout << "Path starts and is >>> " << path_start << "\n";
+		//Shortest absolute form: "a", 1 char
 		//Authority must begin with // and end with /, ?, # or the end of the URI. It doesn't appear in origin form
-		if (token.size() < 4 || token.compare(0, 6, "http://") != 0){
-			cout << "\n\tRequest error: Invalid URI scheme\n";
+		if (token.size() < 1 || path_start != string::npos || params_start != string::npos || frag_start != string::npos){
+			cout << "\n\tRequest error: Invalid URI scheme (authority form)\n";
 			return (true);
 		}
-		path_start = token.find("/", 4);
-		params_start = token.find("?", 4);
-		frag_start = token.find("#", 4);
 	}
 
 	//Origin Form doesn't have specific parsing since it's in included in Authority and Absolute forms
@@ -218,51 +232,41 @@ bool	invalid_uri(const string &token, URI &rq_uri){
 }
 
 
-bool invalid_start_line(vector<string> const &start_line)
+bool invalid_start_line(vector<string> const &line, URI &rq_uri)
 {
 	//Checking total tokens
-	if (start_line.size() != 3){
+	if (line.size() != 3){
 		cout << "Request error: Invalid start-line tokens\n";
 		return (true);
 	}
 
+	//Checking protocol token
+	if (line[2].compare("HTTP/1.1") != 0){
+		cout << "Request error: Invalid HTTP protocol version\n";
+		return (true);
+	}
+
 	//Checking method token
-	char	method = 'u';
-	if (start_line[0].compare("GET") == 0){
-		method = 'g';
-	}
-	else if (start_line[0].compare("POST") == 0){
-		method = 'p';
-	}
-	else if (start_line[0].compare("DELETE") == 0){
-		method = 'd';
-	}
-	else
+	char	mth;
+	line[0] == "GET" ? mth = 'g' :
+		line[0] == "POST" ? mth = 'p' : 
+		line[0] == "DELETE" ? mth = 'd' :
+		mth = 'u';
+	if (mth == 'u')
 	{
 		cout << "Request error: Invalid HTTP method\n";
 		return (true);
 	}
 
-	//Checking protocol token
-	if (start_line[2].compare("HTTP/1.1") != 0){
-		cout << "Request error: Invalid HTTP protocol version\n";
-		return (true);
-	}
-
 	//Checking URI tokens
-	URI	rq_uri;
-	if (invalid_uri(start_line[1], rq_uri)){
+	rq_uri.setMethod(mth);
+	if (invalid_uri(line[1], rq_uri)){
 		cout << "Request error: Invalid URI\n";
 		return (true);
 	}
 	return (false);
 }
 
-bool invalid_header(char const *header)
-{
-
-	return (false);
-}
 
 /*
 size_t	find_CRLF(const char	*request, bool is_start_line){
@@ -291,6 +295,33 @@ size_t	find_CRLF(const char	*request, bool is_start_line){
 }
 */
 
+bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
+{
+	//rfc7230 says that no whitespace is accepted between field-name and :
+	//Therefore, this is the syntax:			field-name: OWS field-content OWS
+	//OWS = Optional WhiteSpace						/r/n
+	size_t	pos;
+	vector<vector<string> >::const_iterator	it;
+	vector<string>::const_iterator	jt;
+	for (it = tokens.begin() + 1; it != tokens.end(); ++it){
+		for (jt = it->begin(); jt != it->end(); ++jt){
+			pos = jt[0].find_first_of(':'); 	
+			if (jt->size() == 1 && jt[0].size() >= 3 &&
+					jt[0].back() != ':' && pos == jt[0].find_last_of(':')){
+				rq_uri.getHeaders().insert(std::make_pair(jt[0].substr(0, pos-1), jt[0].substr(pos+1, jt[0].length())));
+			}
+			else if (jt->size() == 2 && jt[0].size() >= 2 &&
+					jt[0].back() == ':' && pos == jt[0].find_last_of(':')){
+				rq_uri.getHeaders().insert(std::make_pair(jt[0].substr(0, pos-1), jt[1]));
+			}
+			else {
+				return (false);
+			}
+		}
+	}
+	return (false);
+}
+
 void	tokenizer(string &raw_request, vector<vector<string> >	&tokens)
 {
 	std::stringstream 	r_rq(raw_request);
@@ -301,6 +332,7 @@ void	tokenizer(string &raw_request, vector<vector<string> >	&tokens)
 		vector<string>			words;
 		string							word;
 		std::stringstream		line_stream(line);
+		cout << "Linee is [" << line << "] with length " << line.length() << "\n";
 
 		while (line_stream >> word)
 		{
@@ -310,15 +342,41 @@ void	tokenizer(string &raw_request, vector<vector<string> >	&tokens)
 	}
 }
 
+bool	invalid_carriage_return(const char *rq){
+	string	r;
+	r += rq;
+
+	size_t	end = r.find("\r\n\r\n");
+	if (end == string::npos){
+		return (true);
+	}
+	size_t	n = 0;
+	while (n != string::npos && n < end){
+		n = r.find("\n", n);
+		//cout << "Enterrs\n n is: " << n << "\n";
+		//cout << "end is: " << end << "\n";
+		if ((n != string::npos && n >= 1 && r[n-1] != '\r') || n < 1){
+			return (true);
+		}
+		++n;
+	}
+	return (false);
+}
+
 bool invalid_request(const char *request)
 {
 	if (request == nullptr){
 		return (1);
 	}
 
+	URI	rq_uri;
 	string	raw_request(request);
-	cout << "\nValidating following request of size [" << raw_request.size() << "]:\n[" << raw_request << "]\n\n";
+	//cout << "\nValidating following request of size [" << raw_request.size() << "]:\n[" << raw_request << "]\n\n";
 
+	if (invalid_carriage_return(request)){
+		cout << "Request error: Invalid carriage returns\n";
+		return (true);
+	}
 	//Creating a container for lines and words
 	vector<vector<string> >	tokens;
 	tokenizer(raw_request, tokens);
@@ -326,7 +384,7 @@ bool invalid_request(const char *request)
 	for (size_t i = 0; i < tokens.size(); ++i){
 		cout << "Line [" << i << "]:\n";
 		for (size_t j = 0; j < tokens[i].size(); ++j){
-			cout << "\tWord [" << j << "]:" << tokens[i][j] << "\n";
+			cout << "\tWord [" << j << "]:" << tokens[i][j] << " with size " << tokens[i][j].size() << "\n";
 		}
 	}
 
@@ -334,13 +392,13 @@ bool invalid_request(const char *request)
 		return (1);
 	}
 
-	if (invalid_start_line(tokens[0])){
+	if (invalid_start_line(tokens[0], rq_uri)){
 		cout << "Request error: Invalid start line\n";
 		return (true);
 	}
 
-	if (invalid_header(request)){
-		cout << "Request error: Invalid header\n";
+	if (invalid_header(tokens, rq_uri)){
+		cout << "Request error: Invalid header fields\n";
 		return (true);
 	}
 
@@ -349,11 +407,12 @@ bool invalid_request(const char *request)
 
 
 
-int	main(int argc, char **argv)
+/*
+int	main()
 {
-	if (invalid_request(" Holaa me    llamo  Juan\nY soy   el  conquistador \ndel fin   del   mundo "))
+	if (invalid_request("GET http://localhost:80/index?key1=value1&key2=value2#section1  \r\nJuan:Paco\r\nPedro:  Pablo\r\n\r\nCoooonteent"))
 	{
 		return (1);
 	}
 	return (0);
-}
+}*/
