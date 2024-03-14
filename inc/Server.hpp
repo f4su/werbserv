@@ -5,14 +5,18 @@
 #include <map>
 #include <string>
 #include "Route.hpp"
+#include <netinet/in.h>
 
-void    trimTrailingSlashes(std::string & s);
+void	trimTrailingSlashes(std::string & s);
 
 class Server
 {
 private:
+		static int																	max;
+    int                                         socket;
+		std::vector<int>														clients;
     int                                         port;
-    std::string                                 host;
+    uint32_t																		host;
     std::vector<std::string>                    serverNames;
     size_t                                      clientMaxBodySize;
     std::string                                 root;
@@ -25,8 +29,12 @@ public:
     Server();
     ~Server();
 
+    static int                                  getMax();
+    int                                         getSocket() const;
+		std::vector<int>                            getClients() const;
     int                                         getPort() const;
-    std::string                                 getHost() const;
+    uint32_t																		getHost() const;
+		std::string																	getHostStr()const;
     std::vector<std::string>                    getServerNames() const;
     size_t                                      getClientMaxBodySize() const;
     std::string                                 getRoot() const;
@@ -34,8 +42,11 @@ public:
     std::map<int, std::string>                  getErrorPages() const;
     bool                                        getAllowListing() const;
     std::vector<Route>                          getRoutes() const;
+    static void                                 setMax(int const &);
+    void                                        setSocket(const int &);
+    bool																				setClients(const int&);
     void                                        setPort(const int &);
-    void                                        setHost(const std::string &);
+    bool																				setHost(const std::string &);
     void                                        setServerNames(const std::vector<std::string>&);
     void                                        setClientMaxBodySize(const size_t &);
     void                                        setRoot(const std::string &);
@@ -46,22 +57,12 @@ public:
     void                                        print() const;
     void                                        fill(std::string const &, int &);
 
-    typedef std::vector<Route>::iterator iterator;
+    typedef std::vector<Route>::iterator				iterator;
 
-    iterator begin() { return routes.begin(); }
-    iterator end() { return routes.end(); }
+    iterator 																		begin();
+    iterator 																		end();
+    iterator 																		find(const std::string& path);
+		void																				remove_client(const int &);
 
-    iterator find(const std::string& path)
-    {
-        for (iterator it = routes.begin(); it != routes.end(); ++it) {
-            // if (it->getPath() == path || isPathMatched(it->getPath(), path)) {
-            std::string tmp = path;
-            trimTrailingSlashes(tmp);
-            if (it->getPath() == tmp) {
-                return it;
-            }
-        }
-        return routes.end();
-    }
+
 };
-    
