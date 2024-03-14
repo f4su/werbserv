@@ -5,9 +5,7 @@
 #include <map>
 
 using	std::string;
-
-
-bool invalid_request(const char *request);
+using	std::vector;
 
 class	URI{
 	private:
@@ -58,6 +56,25 @@ class	URI{
 
 //Overloads
 std::ostream & 	operator<<(std::ostream &o, const URI &uri);
+
+//	../src/request_parser.cpp
+bool	invalid_request(const char *request, URI &rq_uri);
+bool	invalid_carriage_return(const char *rq);
+void	tokenizer(string &raw_request, vector<vector<string> >	&tokens);
+bool	invalid_start_line(vector<string> const &line, URI &rq_uri);
+bool	invalid_uri(const string &token, URI &rq_uri);
+bool	invalid_header(vector<vector<string> > &tokens, URI &rq_uri);
+
+//	../src/request_parser_utils.cpp
+bool	invalid_chars(const string &path);
+bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_start, size_t f_start, char *form);
+bool	invalid_authority(const string &auth, URI &rq_uri);
+bool	invalid_query_syntax(const string &query, URI &rq_uri);
+bool	invalid_port(const string &port, URI &rq_uri);
+void	determine_uri_form(const string &uri, char *form);
+
+//	../src/request_parser_tester.cpp
+bool	request_testing();
 
 #endif
 

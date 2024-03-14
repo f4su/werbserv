@@ -1,4 +1,4 @@
-NAME = WebServ
+NAME = webserv
 
 GREEN = \033[1;32m
 RED = \033[1;31m
@@ -12,14 +12,18 @@ RM = rm -f
 SRC_DIR = src
 OBJ_DIR = obj
 
-FILE =	main				\
-		Config					\
-		Route						\
-		server					\
-		Utils						\
-		ServerException	\
-		request_parser	\
-		class_uri				\
+FILE =	main							\
+		Config								\
+		Route									\
+		server								\
+		Utils									\
+		ServerException				\
+		request_parser				\
+		request_parser_utils	\
+		request_parser_tester	\
+		class_uri							\
+		launch_servers				\
+		launch_servers_utils	\
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILE)))
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILE)))

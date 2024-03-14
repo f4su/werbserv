@@ -30,5 +30,11 @@
 *.exe
 *.out
 *.app
+webserv
+
+# Vim swap temporary files
+*.swp
+*.swo
+*.swn
 
 .DS_Store

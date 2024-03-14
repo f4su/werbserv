@@ -1,5 +1,6 @@
 #include "../inc/Route.hpp"
-#include "../inc/idk.hpp"
+#include "../inc/ServerException.hpp"
+#include "../inc/Utils.hpp"
 
 Route::Route() : path(""), root(""), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), cgi(), routeType(OTHER)
 {
@@ -81,36 +82,36 @@ void    Route::setErrorPages(const std::map<int, std::string> & errorPages) { th
 
 void Route::print() const
 {
-    std::cout << "***********" << std::endl;
+    std::cout << "\t***********" << std::endl;
     if (!path.empty())
-        std::cout << "path: " << path << std::endl;
+        std::cout << "\tpath: " << path << std::endl;
     if (!root.empty())
-        std::cout << "root: " << root << std::endl;
+        std::cout << "\troot: " << root << std::endl;
     if (!index.empty())
     {
-        std::cout << "index: ";
+        std::cout << "\tindex: ";
         printContainer(index);
     }
     if (!redirect.empty())
-        std::cout << "redirect: " << redirect << std::endl;
+        std::cout << "\tredirect: " << redirect << std::endl;
     if (!methods.empty())
     {
-        std::cout << "methods: ";
+        std::cout << "\tmethods: ";
         printContainer(methods);
     }
     if (!uploadDir.empty())
-        std::cout << "uploadDir: " << uploadDir << std::endl;
+        std::cout << "\tuploadDir: " << uploadDir << std::endl;
     if (allowListing)
-        std::cout << "allowListing: " << allowListing << std::endl;
+        std::cout << "\tallowListing: " << allowListing << std::endl;
     if (!errorPages.empty()) {
-        std::cout << "error_pages: ";
+        std::cout << "\terror_pages: ";
         printMap(errorPages);
     }
     if (!cgi.empty()) {
-        std::cout << "cgi: ";
+        std::cout << "\tcgi: ";
         printMap(cgi);
     }
-    std::cout << "RouteType: " << (routeType == 0 ? "FILE" : (routeType == 1 ? "DIRECTORY" : "OTHER")) << std::endl;
+    std::cout << "\tRouteType: " << (routeType == 0 ? "FILE" : (routeType == 1 ? "DIRECTORY" : "OTHER")) << std::endl;
 }
 
 void Route::fill(std::string const &line, int &lineNb)
