@@ -35,18 +35,18 @@ Cgi& Cgi::operator=(Cgi const& other)
 	return (*this);
 }
 
-std::map<std::string, std::string> getEnv(URI const & req, std::string const & filename)
+std::map<std::string, std::string> Cgi::getEnv(URI const & req, std::string const & filename)
 {
 	std::map<std::string, std::string> env;
 	env["SERVER_SOFTWARE"] = "webserv/1.0";
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	env["REDIRECT_STATUS"] = "1";
 	env["SERVER_PROTOCOL"] = req.getVersion();
-	env["SERVER_PORT"] = toString(req.getPort2());
-	env["REQUEST_METHOD"] = req.getMethod();
+	env["SERVER_PORT"] = toString(req.getPort());
+	env["REQUEST_METHOD"] = req.getMethod2();
 	env["PATH_INFO"] = filename;
 	env["PATH_TRANSLATED"] = filename;
-	env["QUERY_STRING"] = getQuery(req.getUri());
+	env["QUERY_STRING"] = req.getQuery();
 	env["REMOTE_HOST"] = req.getHost();
 	if (req.getRawBody().size() > 0)
 		env["CONTENT_LENGTH"] = toString(req.getRawBody().size());
@@ -55,7 +55,7 @@ std::map<std::string, std::string> getEnv(URI const & req, std::string const & f
 	return (env);
 }
 
-char	**mapToArray(std::map <std::string, std::string> const & map)
+char	**Cgi::mapToArray(std::map <std::string, std::string> const & map)
 {
 	char **array = new char*[map.size() + 1];
 	int i = 0;
@@ -70,7 +70,7 @@ char	**mapToArray(std::map <std::string, std::string> const & map)
 	return (array);
 }
 
-std::string getQuery(std::string const & uri)
+std::string Cgi::getQuery(std::string const & uri)
 {
 	std::string query;
 	size_t pos = uri.find("?");

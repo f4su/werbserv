@@ -1,4 +1,6 @@
 #include "../inc/Config.hpp"
+#include "../inc/Utils.hpp"
+#include "../inc/ServerException.hpp"
 
 std::vector<Server> Config::servers;
 
@@ -81,7 +83,7 @@ Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, 
         server.fill(line, lineNb);
     }
 	server.print();
-    return server;
+  return server;
 }
 
 Route Config::parseRoute(std::ifstream &file, std::string &line, int &lineNb, std::stack<state> &stateStack)
@@ -139,3 +141,24 @@ std::vector<Server> Config::getServers()
 {
     return servers;
 }
+
+
+Config::iterator Config::begin() {
+	return servers.begin();
+}
+
+Config::iterator Config::end(){
+	return servers.end();
+}
+
+/*
+Config::iterator Config::find(const std::string& host, int port){
+	for (iterator it = servers.begin(); it != servers.end(); ++it) {
+			std::vector<std::string> sNames = it->getServerNames();
+			if ((host == it->getHost() || std::find(sNames.begin(), sNames.end(), host) != sNames.end()) && it->getPort() == port) {
+					return it;
+			}
+	}
+	return servers.end(); 
+}
+*/
