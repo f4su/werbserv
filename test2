@@ -11,26 +11,41 @@
     </route>
     <route path="/kapouet">
         root = www/error_pages
-    </route> 
+    </route>
+    <route path="/cgi">
+        root = www/cgi_scripts
+        methods = GET, POST, DELETE
+        cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
+    </route>
     <route path="/method">
         methods = POST
     </route>
     <route path="/redirect">
         redirect = /index.html
     </route>
+    <route path="/uploads">
+        root = www/uploads
+        methods = POST, GET
+        upload_dir = www/uploads/uploads
+    </route>
+    <route path="/post">
+        root = www/cgi_scripts
+        methods = POST
+        index = post.php
+        cgi = .php:cgi-bin/php-cgi
     </route>
     <route path="/delete">
-      methods = DELETE
-     root = www/uploads/uploads
+        methods = DELETE
+        root = www/uploads/uploads
     </route>
 </server>
 
 <server>
-host = 127.0.0.1
-port = 3000
-server_names = localhost
-client_max_body_size = 100000
-error_pages = 404:www/error_pages/404.html
-root = www
-index = test.html
+    host = 127.0.0.1
+    port = 3000
+    server_names = localhost
+    client_max_body_size = 100000
+    error_pages = 404:www/error_pages/404.html
+    root = www
+    index = idk.html
 </server>

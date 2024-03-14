@@ -357,3 +357,45 @@ int	main(int argc, char **argv)
 	}
 	return (0);
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+std::string methods[] = {
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "HEAD",
+    "CONNECT",
+    "OPTIONS",
+    "TRACE",
+    "PATCH",
+};
+
+std::string URI::getMethod() const {
+    return method;
+}
+
+std::string URI::getUri() const {
+    return uri;
+}
+
+std::string URI::getVersion() const {
+    return version;
+}
+
+std::map<std::string, std::string> URI::getHeaders() const {
+    return headers;
+}
+
+std::string URI::getHost() const {
+    return host;
+}
+
+int URI::getPort2() const {
+    return port2;
+}
+
+std::string URI::getRawBody() const {
+    return rawBody;
+}
+////////////////////////////////////////////////////

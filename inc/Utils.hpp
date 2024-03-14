@@ -24,6 +24,14 @@ void printMap(const Container& c)
     std::cout << std::endl;
 }
 
+template <typename T>
+std::string toString(T value)
+{
+    std::ostringstream os;
+    os << value;
+    return os.str();
+}
+
 void                        trim(std::string &);
 std::vector<std::string>    ft_split(const std::string &, const std::string &);
 bool                        mapErrorPages(std::map<int, std::string> & errorPages, std::string const & value);
