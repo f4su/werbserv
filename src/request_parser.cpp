@@ -17,7 +17,7 @@ bool invalid_request(const char *request, URI &rq_uri)
 
 	string	raw_request(request);
 
-	if (invalid_carriage_return(request)){
+	if (invalid_carriage_return(request, rq_uri)){
 		cout << "Request error: Invalid carriage returns\n";
 		return (true);
 	}
@@ -39,25 +39,25 @@ bool invalid_request(const char *request, URI &rq_uri)
 	return (false);
 }
 
-bool	invalid_carriage_return(const char *rq){
+bool	invalid_carriage_return(const char *rq, URI &rq_uri){
 	string	r;
 	r += rq;
 
-	cout << rq;
 	size_t	end = r.find("\r\n\r\n");
 	if (end == string::npos){
 		return (true);
 	}
-	size_t	n = 0;
-	while (n != string::npos && n < end){
-		n = r.find("\n", n);
+	size_t	headers_size = 0, n = 0;
+	while ((n = r.find("\n", n)) != string::npos && n < end){
 		//cout << "Enterrs\n n is: " << n << "\n";
 		//cout << "end is: " << end << "\n";
-		if ((n != string::npos && n >= 1 && r[n-1] != '\r') || n < 1){
+		++headers_size;
+		if ((n >= 1 && r[n-1] != '\r') || n < 1){
 			return (true);
 		}
 		++n;
 	}
+	rq_uri.setHeadersSize(headers_size);
 	return (false);
 }
 
@@ -65,14 +65,12 @@ void	tokenizer(string &raw_request, vector<vector<string> >	&tokens){
 	std::stringstream 	r_rq(raw_request);
 	string							line;
 
-	while (std::getline(r_rq, line))
-	{
+	while (std::getline(r_rq, line)){
 		vector<string>			words;
 		string							word;
 		std::stringstream		line_stream(line);
 		//cout << "Linee is [" << line << "] with length " << line.length() << "\n";
-		while (line_stream >> word)
-		{
+		while (line_stream >> word){
 			words.push_back(word);
 		}
 		tokens.push_back(words);
@@ -171,29 +169,55 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
 	//Therefore, this is the syntax:			field-name: OWS field-content OWS
 	//OWS = Optional WhiteSpace						/r/n
 	size_t	pos;
-	std::map<string, string>	hdrs;
+	size_t	index = 0;
+
+	mapStrVect			hdrs;
+	vector<string>	values, line;
 	vector<vector<string> >::const_iterator	it;
-	vector<string>::const_iterator	jt;
-	for (it = tokens.begin() + 1; it != tokens.end(); ++it){
-		for (jt = it->begin(); jt != it->end(); ++jt){
-			pos = jt[0].find_first_of(':'); 	
-			if (jt == it->begin()){
-				if (it->size() == 1 && jt[0].size() >= 3 &&
-						jt[0].front() != ':' && jt[0].back() != ':' && pos == jt[0].find_last_of(':')){
-					hdrs.insert(std::make_pair(jt[0].substr(0, pos), jt[0].substr(pos+1, jt[0].length())));
-				}
+	for (it = tokens.begin(); it != tokens.end() && index++ <= rq_uri.getHeadersSize(); ++it){
+		if (it == tokens.begin() || it->size() < 1){
+			continue ;
+		}
+		line = *it;
 
-
-				else if (it->size() == 2 && jt[0].size() >= 2 &&
-						jt[0].front() != ':' && jt[0].back() == ':' && pos == jt[0].find_last_of(':')){
-					hdrs.insert(std::make_pair(jt[0].substr(0, pos), jt[1]));
-				}
-
-				else {
+		if ((pos = line[0].find_first_of(':')) == string::npos){
+			return (true);
+		}
+		switch (line.size()){
+			case 1:
+				if (line[0].size() < 3 || line[0].front() == ':' || line[0].back() == ':' || pos != line[0].find_last_of(':')){
 					return (true);
 				}
+				values.push_back(line[0].substr(pos+1, line[0].length()));
+				break ;
+
+			case 2:
+				if (line[0].size() < 2 || line[0].front() == ':' || line[0].back() != ':' || pos != line[0].find_last_of(':')){
+					return (true);
+				}
+				values.push_back(line[1]);
+				break ;
+
+			default :
+				if (line[0].size() < 2 || line[0].front() == ':' || line[0].back() != ':' || pos != line[0].find_last_of(':')){
+					return (true);
+				}
+				for (size_t word = 1; word < line.size(); ++word){
+					if (((word == line.size() -1) && (line[word].back() == ',')) ||
+							((word < line.size() - 1) && (line[word].back() != ',' || line[word].size() <= 1))){
+						return (true);
+					}
+					if (word < line.size() - 1){
+						values.push_back(line[word].substr(0, line[word].size() - 1));
+					}
+					else{
+						values.push_back(line[word]);
+					}
+				}
+				break ;
 			}
-		}
+			hdrs[line[0].substr(0, pos)] = values;
+			values.clear();
 	}
 	if (hdrs.size() == 0){
 		return (true);

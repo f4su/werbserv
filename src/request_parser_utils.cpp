@@ -81,8 +81,8 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 
 	//Params/Query (optional) must begin with a ? and end with # or the end of the URI. It's only applicable in absolute form
 	if (pr_start != string::npos){
-		f_start != string::npos ? rq_uri.setQuery(token.substr(pr_start, f_start - pr_start - 1)) :
-			rq_uri.setQuery(token.substr(pr_start, token.size() - pr_start - 1));
+		f_start != string::npos ? rq_uri.setQuery(token.substr(pr_start, f_start - pr_start)) :
+			rq_uri.setQuery(token.substr(pr_start, token.size() - pr_start));
 		//check params syntax
 		if (invalid_query_syntax(rq_uri.getQuery(), rq_uri))
 		{
@@ -159,11 +159,11 @@ bool	invalid_query_syntax(const string &query, URI &rq_uri){
 	std::map<string, string>	prms;
 	for (it = params.begin(); it != params.end(); ++it){
 		std::vector<std::string>	pairs = ft_split(*it, "=");
-		cout << "kkkkkkkkkk ---> " << *it << "\n";
+		//cout << "kkkkkkkkkk ---> " << *it << "\n";
 		if (pairs.size() != 2){
 			return (true);
 		}
-		cout << "pair 0 )))> " << pairs[0] << "\npair 1 )))> " << pairs[1] << "\n";
+		//cout << "pair 0 )))> " << pairs[0] << "\npair 1 )))> " << pairs[1] << "\n";
 		prms.insert(std::make_pair(pairs[0], pairs[1]));
 	}
 	rq_uri.setParams(prms);

@@ -1,5 +1,5 @@
 <server>
-    port = 8080
+    port = 7070
     server_names = localhost
     client_max_body_size = 100000000000000
     error_pages = 404:www/error_pages/404.html 500:www/error_pages/500.html
