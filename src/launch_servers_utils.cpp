@@ -26,7 +26,7 @@ void	prepare_sockets(vector<Server> &servers){
 		addr.sin_addr.s_addr = htonl(it->getHost());
 		if (bind(it->getSocket(), (const sa*)&addr, sizeof(addr)) == -1){
 			close_sockets(servers);
-			throw ServerException("Error when binding port");
+			throw ServerException("Error when binding port. Review port permissions and host");
 		}
 		if (listen(it->getSocket(), 20) == -1){
 			close_sockets(servers);

@@ -64,7 +64,6 @@ void accept_connection(int &socket, Server &server, fd_set &fds){
 bool	handle_sockets(Server &server, vector<Server> servers, fd_set &ready, fd_set &all, bool sock_is_server, int client){
 	int	socket = sock_is_server ? server.getSocket() : client;
 
-	cout << "Socket is --> " << socket << std::endl;
 	if (FD_ISSET(socket, &ready)){
 		if (sock_is_server){
 			cout << "Socket going to accept" << std::endl;
@@ -108,7 +107,7 @@ void read_connection(int &client, Server &server){
 void respond_connection(int &client, Server &server, string &request){
 	URI	rq_info;
 	if (invalid_request(request.c_str(), rq_info)){
-		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << std::endl;
+		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 		return ;
 	}
 	cout << rq_info;
