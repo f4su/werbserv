@@ -110,8 +110,11 @@ void respond_connection(int &client, Server &server, string &request){
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 		return ;
 	}
+	if (rq_info.getIsChunked()){
+		read_chunked(request, rq_info);
+	}
 	cout << rq_info;
-	std::string s_buff = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nContent-length: 13\r\n\n<h1>Hola</h1>";
+	std::string s_buff = "HTTP/1.1 100 continue\r\nContent-type: text/html\r\n\ncotinue";
 	if (send(client, s_buff.c_str(), strlen(s_buff.c_str()), 0) == -1){
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		return ;

@@ -174,6 +174,7 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
 	mapStrVect			hdrs;
 	vector<string>	values, line;
 	vector<vector<string> >::const_iterator	it;
+	string	key;
 	for (it = tokens.begin(); it != tokens.end() && index++ <= rq_uri.getHeadersSize(); ++it){
 		if (it == tokens.begin() || it->size() < 1){
 			continue ;
@@ -216,12 +217,18 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
 				}
 				break ;
 			}
-			hdrs[line[0].substr(0, pos)] = values;
+			key = line[0].substr(0, pos);
+			std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+			hdrs[key] = values;
 			values.clear();
+			key.clear();
 	}
 	if (hdrs.size() == 0){
 		return (true);
 	}
 	rq_uri.setHeaders(hdrs);
+	transfer_encoding(rq_uri);
 	return (false);
 }
+
+

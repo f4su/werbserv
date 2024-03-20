@@ -1,13 +1,13 @@
 #include	"../inc/request_parser.hpp"
 
-URI::URI() : scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""), headers_size(0){
+URI::URI() : scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""), headers_size(0), isChunked(false){
 }
 
 URI::URI(std::string sche, std::string auth, std::string host, size_t prt,
 		std::string pth, std::string qry, mapStrStr prms,
-		std::string fragm, size_t headers_size, mapStrVect hdrs) :
+		std::string fragm, size_t headers_size, bool chunked, mapStrVect hdrs) :
 	scheme(sche), authority(auth), host(host), port(prt), path(pth), query(qry), fragment(fragm),
-	headers_size(headers_size), params(prms){
+	headers_size(headers_size), isChunked(chunked), params(prms){
 
 	for (mapStrVect::const_iterator it = hdrs.begin(); it != hdrs.end(); ++it) {
 		vector<string> vecCopy(it->second.begin(), it->second.end());
@@ -17,7 +17,7 @@ URI::URI(std::string sche, std::string auth, std::string host, size_t prt,
 
 URI::URI(URI const &copy) :
 	scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path),
-	query(copy.query), fragment(copy.fragment), headers_size(copy.headers_size), params(copy.params){
+	query(copy.query), fragment(copy.fragment), headers_size(copy.headers_size), isChunked(copy.isChunked), params(copy.params){
 
 	for (mapStrVect::const_iterator it = copy.headers.begin(); it != copy.headers.end(); ++it) {
 		vector<string> vecCopy(it->second.begin(), it->second.end());
@@ -56,6 +56,10 @@ std::string	URI::getPath()const{
 
 std::string	URI::getQuery()const{
 	return (query);
+}
+
+bool	URI::getIsChunked()const{
+	return (isChunked);
 }
 
 mapStrStr	URI::getParams()const{
@@ -103,6 +107,10 @@ void	URI::setQuery(std::string qry){
 	query = qry;
 }
 
+void	URI::setIsChunked(bool chunked){
+	isChunked = chunked;
+}
+
 void	URI::setParams(mapStrStr prms){
 	params = prms;
 }
@@ -129,6 +137,7 @@ URI	&	URI::operator=(const URI &rhs){
 	this->path = rhs.getPath();
 	this->query = rhs.getQuery();
 	this->headers_size = rhs.getHeadersSize();
+	this->isChunked = rhs.getIsChunked();
 	this->params = rhs.getParams();
 	this->fragment = rhs.getFragment();
 	this->headers = rhs.getHeaders();
