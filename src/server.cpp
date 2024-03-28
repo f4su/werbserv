@@ -303,3 +303,9 @@ std::string Server::getHostStr()const{
 
     return ip_str;
 }
+
+
+std::string Server::getHost2() const
+{
+    return host2;
+}

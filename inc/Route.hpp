@@ -36,8 +36,8 @@ public:
     void                                        setAllowListing(const bool& allowListing);
     void                                        setErrorPages(const std::map<int, std::string>&);
 
-    RouteType getRouteType() const {
-        return routeType;
+    RouteType getRouteType() const{
+        return (routeType);
     }
 
     void setRouteType(RouteType type) {

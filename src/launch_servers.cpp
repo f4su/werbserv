@@ -112,7 +112,9 @@ void respond_connection(int &client, Server &server, string &request){
 		return ;
 	}
 	cout << rq_info;
+	Response	response;
 	std::string s_buff = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nContent-length: 13\r\n\n<h1>Hola</h1>";
+	///implement response on send
 	if (send(client, s_buff.c_str(), strlen(s_buff.c_str()), 0) == -1){
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		return ;

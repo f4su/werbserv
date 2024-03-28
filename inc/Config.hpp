@@ -26,4 +26,15 @@ public:
     typedef std::vector<Server>::iterator 	iterator;
     static iterator 												begin();
     static iterator 												end();
+
+    static iterator find(const std::string& host, int port)
+    {
+        for (iterator it = servers.begin(); it != servers.end(); ++it)
+        {
+            std::vector<std::string> sNames = it->getServerNames();
+            if ((host == it->getHost2() || std::find(sNames.begin(), sNames.end(), host) != sNames.end()) && it->getPort() == port)
+                return (it);
+        }
+        return (servers.end());
+    }
 };

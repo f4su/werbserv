@@ -17,6 +17,7 @@ private:
 		std::vector<int>														clients;
     int                                         port;
     uint32_t																		host;
+    std::string                                 host2;
     std::vector<std::string>                    serverNames;
     size_t                                      clientMaxBodySize;
     std::string                                 root;
@@ -34,6 +35,7 @@ public:
 		std::vector<int>                            getClients() const;
     int                                         getPort() const;
     uint32_t																		getHost() const;
+    std::string                                 getHost2() const;
 		std::string																	getHostStr()const;
     std::vector<std::string>                    getServerNames() const;
     size_t                                      getClientMaxBodySize() const;
@@ -61,8 +63,19 @@ public:
 
     iterator 																		begin();
     iterator 																		end();
-    iterator 																		find(const std::string& path);
 		void																				remove_client(const int &);
+
+    iterator find(const std::string& path)
+    {
+        for (iterator it = routes.begin(); it != routes.end(); ++it)
+        {
+            std::string tmp = path;
+            trimTrailingSlashes(tmp);
+            if (it->getPath() == tmp)
+                return it;
+        }
+        return routes.end();
+    }
 
 
 };

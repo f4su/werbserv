@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <map>
+#include "../inc/ServerException.hpp"
 
 using	std::string;
 using	std::vector;
@@ -26,6 +27,9 @@ class	URI{
 
 		////////////////////////////////////////
 		std::string	method2;
+    	HttpStatusCode  statusCode;
+		std::string contentType;
+		std::string	boundary;
 		///////////////////////////////////////////
 
 	public:
@@ -66,6 +70,10 @@ class	URI{
 
 		///////////////////////////////////////////////
 		std::string getMethod2() const;
+		HttpStatusCode getStatusCode() const ;
+		std::string getBody() const;
+		std::string getContentType() const;
+		std::string getBoundary() const;
 		////////////////////////////////////////////////
 };
 

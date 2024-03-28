@@ -46,7 +46,7 @@ std::map<std::string, std::string> Cgi::getEnv(URI const & req, std::string cons
 	env["REQUEST_METHOD"] = req.getMethod2();
 	env["PATH_INFO"] = filename;
 	env["PATH_TRANSLATED"] = filename;
-	env["QUERY_STRING"] = req.getQuery();
+	env["QUERY_STRING"] = getQuery(req.getUri()); //req.getQuery();
 	env["REMOTE_HOST"] = req.getHost();
 	if (req.getRawBody().size() > 0)
 		env["CONTENT_LENGTH"] = toString(req.getRawBody().size());

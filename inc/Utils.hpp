@@ -5,6 +5,9 @@
 #include	<vector>
 #include <iostream>
 #include <sstream>
+#include <dirent.h>
+#include "ServerException.hpp"
+#include <sys/stat.h>
 
 template <typename Container>
 void printContainer(const Container& c)
@@ -33,7 +36,7 @@ std::string toString(T value)
 {
     std::ostringstream os;
     os << value;
-    return os.str();
+    return (os.str());
 }
 
 void                        trim(std::string &);
@@ -41,3 +44,7 @@ std::vector<std::string>    ft_split(const std::string &, const std::string &);
 bool                        mapErrorPages(std::map<int, std::string> & errorPages, std::string const & value);
 bool                        mapCgi(std::map<std::string, std::string> & cgi, std::string const & value);
 void                        trimTrailingSlashes(std::string & s);
+std::vector<std::string>    getFilesInDirectory(std::string const & rootPath, std::string const & reqPath);
+void                        removeConsecutiveChars(std::string & s, char c);
+std::string                 generateHtmlListing(const std::vector<std::string>& files);
+void                        removeFileOrDirectory(std::string path);

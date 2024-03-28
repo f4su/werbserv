@@ -18,6 +18,7 @@ FILE =	main					\
 		Route					\
 		server					\
 		Utils					\
+		Response				\
 		ServerException			\
 		request_parser			\
 		request_parser_utils	\
@@ -25,6 +26,7 @@ FILE =	main					\
 		class_uri				\
 		launch_servers			\
 		launch_servers_utils	\
+		Mime					\
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILE)))
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILE)))

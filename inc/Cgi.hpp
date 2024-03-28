@@ -1,7 +1,9 @@
 #pragma once
 
-#include "idk.hpp"
 #include "request_parser.hpp"
+#include "Route.hpp"
+#include "Utils.hpp"
+#include "ServerException.hpp"
 
 class   Cgi : public URI
 {
@@ -24,6 +26,6 @@ public:
 	std::map<std::string, std::string> getEnv(URI const & req, std::string const & filename);
 	char	**mapToArray(std::map <std::string, std::string> const & map);
 	std::string getQuery(std::string const & uri);
-	std::string getFileExt(std::string const &path);
+	static std::string getFileExt(std::string const &path);
 	void executeCgi(URI const & req);
 };

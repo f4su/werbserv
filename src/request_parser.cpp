@@ -230,4 +230,23 @@ std::string URI::getVersion() const {
 std::string URI::getRawBody() const {
     return rawBody;
 }
+
+HttpStatusCode URI::getStatusCode() const
+{
+    return statusCode;
+}
+
+std::string URI::getBody() const
+{
+    return body;
+}
+std::string URI::getContentType() const
+{
+    return contentType;
+}
+
+std::string URI::getBoundary() const
+{
+    return boundary;
+}
 ////////////////////////////////////////////////////
