@@ -15,15 +15,17 @@ using std::cerr;
 //	../src/launch_servers.cpp
 void		listening_connections(std::vector<Server> servers);
 void		accept_connection(int &socket, Server &server, fd_set &fds);
-bool		handle_sockets(Server &server, vector<Server> servers, fd_set &ready, fd_set &all, bool sock_is_server, int client);
-void		read_connection(int &client, Server &server);
-void		respond_connection(int &socket, Server &server, string &request);
+bool		handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_set &all, bool sock_is_server, int client);
+void		read_connection(int &client, Server &server, URI &rq);
+void		parse_rq(int &client, Server &server, URI &rq_info);
+void		respond_connection(int &client, Server &server, URI &rq_info);
 
 //	../src/launch_servers_utils.cpp
 string	displayHiddenChars(string& str);
 void		prepare_sockets(vector<Server> &servers);
 void		calculate_max(vector<Server> &servers);
 void		close_sockets(vector<Server> &servers);
+void		close_client_connection(int &client, Server &server, vector<Server> &servers, fd_set &all);
 
 #endif
 

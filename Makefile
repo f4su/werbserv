@@ -24,6 +24,7 @@ FILE =	main							\
 		class_uri							\
 		launch_servers				\
 		launch_servers_utils	\
+		read_chunked					\
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILE)))
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILE)))

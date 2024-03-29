@@ -4,14 +4,20 @@
 #include "../inc/launch_servers.hpp"
 #include	<unistd.h>
 
-#define	MAXLINE	1024	//By default, nginx sets client_header_buffer_size to 1 kilobyte (1024 bytes)
+#include <iterator>     // std::advance
+
+#define	MAXLINE		1024	//By default, nginx sets client_header_buffer_size to 1 kilobyte (1024 bytes)
+#define	CRLFx2		"\r\n\r\n"
+#define	CONTINUE	"HTTP/1.1 100 Continue"
+
+typedef vector<int>::iterator vecIntIt;
 
 typedef sockaddr sa;
 typedef sockaddr_in sa_in;
 
 void	listening_connections(vector<Server> servers)
 {
-	fd_set	readfds, fdNow;
+	fd_set			readfds, fdNow;
 	vector<int>	clients;
 
 	FD_ZERO(&readfds);
@@ -31,11 +37,12 @@ void	listening_connections(vector<Server> servers)
 		}
 		for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
 			if (handle_sockets(*it, servers, fdNow, readfds, true, 0)){
+				cout << MAG << "Closing WebServ" << EOC << std::endl;
 				break ;
 			}
 			if (!it->getClients().empty()){
 				clients = it->getClients();
-				for (vector<int>::iterator client = clients.begin(); client != clients.end(); ++client){
+				for (vecIntIt client = clients.begin(); client != clients.end(); ++client){
 					handle_sockets(*it, servers, fdNow, readfds, false, *client);
 				}
 			}
@@ -46,8 +53,8 @@ void	listening_connections(vector<Server> servers)
 }
 
 void accept_connection(int &socket, Server &server, fd_set &fds){
-	int	client_fd;
-	sa_in addr;
+	int				client_fd;
+	sa_in			addr;
 	socklen_t addr_len = sizeof(addr);
 
 	client_fd = accept(socket, (sa *)&addr, &addr_len);
@@ -59,9 +66,12 @@ void accept_connection(int &socket, Server &server, fd_set &fds){
 		server.setMax(client_fd);
 	}
 	FD_SET(client_fd, &fds);
+	mapIntUri	clientRequest = server.getClientUri();
+	clientRequest[client_fd] = URI();
+	server.setClientUri(clientRequest);
 }
 
-bool	handle_sockets(Server &server, vector<Server> servers, fd_set &ready, fd_set &all, bool sock_is_server, int client){
+bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_set &all, bool sock_is_server, int client){
 	int	socket = sock_is_server ? server.getSocket() : client;
 
 	if (FD_ISSET(socket, &ready)){
@@ -70,53 +80,92 @@ bool	handle_sockets(Server &server, vector<Server> servers, fd_set &ready, fd_se
 			accept_connection(socket, server, all);
 			return (true);
 		}
-		read_connection(socket, server);
-		close(client);
-		server.remove_client(client);
-		calculate_max(servers);
-		FD_CLR(socket, &all);
+		read_connection(socket, server, server.getClientUri().at(client));
+		if (server.getClientUri().at(client).getCloseConnection()){
+			//keep connection alive ? si hay el header
+			close_client_connection(client, server, servers, ready);
+		}
 	}
 	return (false);
 }
 
-void read_connection(int &client, Server &server){				
-			char request[MAXLINE];
-			ssize_t	readed;
-			string	rq("");
+void read_connection(int &client, Server &server, URI &rq){				
+	char request[MAXLINE];
+	ssize_t	readed;
 
-			while (rq.find("\r\n\r\n") == string::npos){
-				memset(request, 0, MAXLINE);
-				if ((readed = recv(client, request, sizeof(request), 0)) <= 0){
-					if (readed == 0){
-						cerr << CYA << "Connection closed by client" << EOC << std::endl;	
-					}
-					else {	
-						cerr << RED << "Error: Couldn't read from that client fd" << EOC << std::endl;
-					}
-					break ;
-				}
-				string	tmp(request, readed);
-				rq += tmp;
+	if (server.getClientUri().at(client).getIsChunked() == false){
+		memset(request, 0, MAXLINE);
+		cerr << RED << "Going to read request" << EOC << std::endl;	
+		readed = recv(client, request, sizeof(request), 0);
+		if (readed <= 0){
+			if (readed == 0){
+				cerr << CYA << "Connection closed by client" << EOC << std::endl;	// No puede haber una lectura que sea 0 ??
 			}
-			cout << "READED on port " << server.getPort() << ": [" << displayHiddenChars(rq) << "]" << std::endl;
-			if (rq.size() > 0){
-				respond_connection(client, server, rq);
+			else {	
+				cerr << RED << "Error: Couldn't read from that client fd" << EOC << std::endl;
 			}
+			rq.setCloseConnection(true);
+			return ;
+		}
+		string	tmp(request, readed);
+		if (tmp.size() > 0){
+			rq.setRequest(rq.getRequest() += tmp);
+		}
+
+		cout << "READED on port " << server.getPort() << ": [" << std::endl;
+		string hidden(rq.getRequest());
+		displayHiddenChars(hidden);
+		cout << "]\n" << std::endl;
+
+	}
+	size_t	crlf = rq.getRequest().find(CRLFx2);
+	if (crlf != string::npos){
+		if (rq.getRequest().size() > crlf + 4){
+			string body = rq.getRequest().substr(crlf + 4, rq.getRequest().size());
+			rq.setBody(body);
+			cout << CYA << "Body is+++++++>[" << 	rq.getBody() << std::endl << "]" << std::endl;
+		}
+		parse_rq(client, server, server.getClientUri().at(client)); 
+	}
 }
 
-void respond_connection(int &client, Server &server, string &request){
-	URI	rq_info;
-	if (invalid_request(request.c_str(), rq_info)){
+void parse_rq(int &client, Server &server, URI &rq){
+
+	if (rq.getHeadersParsed() == false && 
+			invalid_request(rq.getRequest().c_str(), rq)){
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 		return ;
 	}
-	if (rq_info.getIsChunked()){
-		read_chunked(request, rq_info);
+
+	if (rq.getExpectContinue() == true){
+		send(client, CONTINUE, strlen(CONTINUE), 0);
+		cout << CYA << "-100 sent" << EOC << std::endl;
+		rq.setExpectContinue(false);
 	}
-	cout << rq_info;
-	std::string s_buff = "HTTP/1.1 100 continue\r\nContent-type: text/html\r\n\ncotinue";
+	
+	if (rq.getIsChunked()){
+		if (read_chunked(client, rq)){
+			cout << RED << "Error: Invalid Chunked request on server " << server.getPort() << " from client " << client << EOC << std::endl;
+			//send bad request
+			//close sockets?
+			return ;
+		}
+	}
+	if (rq.getIsChunked() == false){
+		respond_connection(client, server, rq);
+	}
+}
+
+void respond_connection(int &client, Server &server, URI &rq){
+
+	string s_buff = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n";
+	s_buff += rq.getBody();
 	if (send(client, s_buff.c_str(), strlen(s_buff.c_str()), 0) == -1){
+		//close connection?
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		return ;
 	}
+	cout << RED << "Responding!!" << EOC << std::endl;
+	server.getSocket(); //to avoid unused
+	rq.setCloseConnection(true);
 }

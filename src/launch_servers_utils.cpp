@@ -3,6 +3,8 @@
 #include	"../inc/ServerException.hpp"
 #include	<unistd.h>
 
+#define GREY "\033[30m"
+
 using std::cout;
 
 typedef sockaddr sa;
@@ -38,12 +40,21 @@ void	prepare_sockets(vector<Server> &servers){
 
 std::string displayHiddenChars(string& str) {
     std::string result;
+		size_t	line = 0;
+		//size_t	chunk_counts = 0;
 		char c;
     for (string::iterator it = str.begin(); it != str.end(); ++it) {
 				c = *it;
         switch (c) {
             case '\n':
                 result += "\\n";
+								cout << line++ << "\t" << result;
+								cout << std::endl;
+								/*
+								if (result.size() < 20){
+										cout << RED << "->Chunk count: " << ++chunk_counts << EOC << std::endl;
+								}*/
+								result.clear();
                 break;
             case '\t':
                 result += "\\t";
@@ -103,4 +114,18 @@ void	close_sockets(vector<Server> &servers){
 			}
 		}
 	}
+}
+
+void	close_client_connection(int &client, Server &server, vector<Server> &servers, fd_set &all){
+	cout << "---Closing client " << client << "---" << std::endl;
+		close(client);
+		server.remove_client(client);
+
+		mapIntUri	clients_requests = server.getClientUri();
+		clients_requests.erase(client);
+		server.setClientUri(clients_requests);
+
+		calculate_max(servers);
+		FD_CLR(client, &all);
+	cout << "---Client " << client << " successfully closed---" << std::endl;
 }

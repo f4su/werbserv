@@ -9,8 +9,8 @@
 
 int Server::max = 0;
 
-Server::Server() : socket(-1), clients(), port(-1), host(0), serverNames(), clientMaxBodySize(0),
-	root(DEFAULT_ROOT), index(), errorPages(), allowListing(false), routes(){
+Server::Server() : socket(-1), port(-1), host(0), clientMaxBodySize(0), allowListing(false), serverNames(),
+	root(DEFAULT_ROOT), index(), clients(), client_uri(), errorPages(), routes(){
 };
 
 Server::~Server(){
@@ -69,6 +69,9 @@ std::vector<Route>  Server::getRoutes() const{
     return (this->routes);
 }
 
+mapIntUri	&Server::getClientUri(){
+	return (client_uri);
+}
 
 //----------------
 //		Setters
@@ -161,6 +164,9 @@ void    Server::addRoute(Route route){
     this->routes.push_back(route);
 }
 
+void	Server::setClientUri(const mapIntUri &client_uri_map){
+	this->client_uri = client_uri_map;
+}
 
 //----------------
 //		Functions
