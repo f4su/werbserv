@@ -41,7 +41,7 @@ uint32_t	Server::getHost() const{
     return host;
 }
 
-std::vector<std::string>    Server::getServerNames() const{
+std::vector<string>    Server::getServerNames() const{
     return serverNames;
 }
 
@@ -49,11 +49,11 @@ size_t  Server::getClientMaxBodySize() const{
     return clientMaxBodySize;
 }
 
-std::string Server::getRoot() const{
+string Server::getRoot() const{
     return root;
 }
 
-std::vector<std::string>    Server::getIndex() const{
+std::vector<string>    Server::getIndex() const{
     return index;
 }
 
@@ -61,7 +61,7 @@ bool    Server::getAllowListing() const{
     return allowListing;
 }
 
-std::map<int, std::string>  Server::getErrorPages() const{
+std::map<int, string>  Server::getErrorPages() const{
     return errorPages;
 }
 
@@ -97,7 +97,7 @@ void	Server::setPort(const int & port){
     this->port = port;
 }
 
-bool	Server::setHost(const std::string & host){
+bool	Server::setHost(const string & host){
 	if (host.empty()){
 		return (true);
 	}
@@ -136,7 +136,7 @@ bool	Server::setHost(const std::string & host){
 	return (false);
 }
 
-void	Server::setServerNames(const std::vector<std::string>& serverNames){
+void	Server::setServerNames(const std::vector<string>& serverNames){
     this->serverNames = serverNames;
 }
 
@@ -144,7 +144,7 @@ void	Server::setClientMaxBodySize(const size_t & clientMaxBodySize){
     this->clientMaxBodySize = clientMaxBodySize;
 }
 
-void	Server::setRoot(const std::string & root){
+void	Server::setRoot(const string & root){
     this->root = root;
 }
 
@@ -152,11 +152,11 @@ void    Server::setAllowListing(const bool & allowListing){
     this->allowListing = allowListing;
 }
 
-void    Server::setErrorPages(const std::map<int, std::string>& errorPages){
+void    Server::setErrorPages(const std::map<int, string>& errorPages){
     this->errorPages = errorPages;
 }
 
-void    Server::setIndex(const std::vector<std::string>& index){
+void    Server::setIndex(const std::vector<string>& index){
 	this->index = index;
 }
 
@@ -204,9 +204,9 @@ void	Server::print() const{
     std::cout << MAG << "\n^--------------------^\n" << EOC << std::endl;
 }
 
-void Server::fill(std::string const &line, int &lineNb){
-    std::vector<std::string>    split;
-    std::string                 option, value;
+void Server::fill(string const &line, int &lineNb){
+    std::vector<string>    split;
+    string                 option, value;
 
     split = ft_split(line, "=");
 
@@ -230,7 +230,7 @@ void Server::fill(std::string const &line, int &lineNb){
 				}
     }
     else if (option == "server_names" && serverNames.empty()) {
-        std::vector<std::string>    names = ft_split(value, ", ");
+        std::vector<string>    names = ft_split(value, ", ");
         if (names.empty())
             throw ServerException("Invalid server line", lineNb);
         setServerNames(names);
@@ -246,7 +246,7 @@ void Server::fill(std::string const &line, int &lineNb){
         setRoot(value);
     }
     else if (option == "index" && index.empty()) {
-        std::vector<std::string>    index = ft_split(value, ", ");
+        std::vector<string>    index = ft_split(value, ", ");
         if (index.empty())
             throw ServerException("Invalid server line", lineNb);
         setIndex(index);
@@ -287,8 +287,8 @@ void	Server::remove_client(const int & client){
 }
 
 
-std::string Server::getHostStr()const{
-    std::string ip_str;
+string Server::getHostStr()const{
+    string ip_str;
 
 		if (host == 0){
 			ip_str += "Not set";
@@ -309,3 +309,23 @@ std::string Server::getHostStr()const{
 
     return ip_str;
 }
+
+
+string Server::getHost2() const
+{
+    return host2;
+}
+
+
+
+Server::iterator Server::find(const string& path){
+	for (iterator it = routes.begin(); it != routes.end(); ++it)
+	{
+		std::string tmp = path;
+		trimTrailingSlashes(tmp);
+		if (it->getPath() == tmp)
+			return it;
+	}
+	return routes.end();
+}
+

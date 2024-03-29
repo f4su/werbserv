@@ -20,35 +20,42 @@ Route::~Route()
 
 std::string Route::getPath() const
 {
-    return path;
+    return (path);
 }
 std::string Route::getRoot() const
 {
-    return root;
+    return (root);
 }
 std::vector<std::string> Route::getIndex() const
 {
-    return index;
+    return (index);
 }
 std::string Route::getRedirect() const
 {
-    return redirect;
+    return (redirect);
 }
 std::vector<std::string> Route::getMethods() const
 {
-    return methods;
+    return (methods);
 }
 std::string Route::getUploadDir() const
 {
-    return uploadDir;
+    return (uploadDir);
 }
 bool Route::getAllowListing() const
 {
-    return allowListing;
+    return (allowListing);
 }
-std::map<int, std::string> Route::getErrorPages() const { return errorPages; }
-std::map<std::string, std::string> Route::getCgi() const { return cgi; }
 
+std::map<int, std::string> Route::getErrorPages() const
+{
+    return (errorPages);
+}
+
+std::map<std::string, std::string> Route::getCgi() const
+{
+    return (cgi);
+}
 
 void Route::setPath(const std::string &path)
 {
@@ -103,11 +110,13 @@ void Route::print() const
         std::cout << "\tuploadDir: " << uploadDir << std::endl;
     if (allowListing)
         std::cout << "\tallowListing: " << allowListing << std::endl;
-    if (!errorPages.empty()) {
+    if (!errorPages.empty())
+    {
         std::cout << "\terror_pages: ";
         printMap(errorPages);
     }
-    if (!cgi.empty()) {
+    if (!cgi.empty())
+    {
         std::cout << "\tcgi: ";
         printMap(cgi);
     }
@@ -128,13 +137,9 @@ void Route::fill(std::string const &line, int &lineNb)
     if (value.empty() || option.empty())
         throw ServerException("Invalid route line", lineNb);
     if (option == "path" && path.empty())
-    {
         setPath(value);
-    }
     else if (option == "root" && root.empty())
-    {
         setRoot(value);
-    }
     else if (option == "index" && index.empty())
     {
         std::vector<std::string> index = ft_split(value, ", ");
@@ -143,9 +148,7 @@ void Route::fill(std::string const &line, int &lineNb)
         setIndex(index);
     }
     else if (option == "redirect" && redirect.empty())
-    {
         setRedirect(value);
-    }
     else if (option == "methods" && methods.empty())
     {
         std::vector<std::string> methods = ft_split(value, ", ");
@@ -154,9 +157,7 @@ void Route::fill(std::string const &line, int &lineNb)
         setMethods(methods);
     }
     else if (option == "upload_dir" && uploadDir.empty())
-    {
         setUploadDir(value);
-    }
     else if (option == "allow_listing" && allowListing == 0)
     {
         if (value == "on" || value == "1" || value == "true")
@@ -166,7 +167,8 @@ void Route::fill(std::string const &line, int &lineNb)
         else
             throw ServerException("Invalid route line", lineNb);
     }
-    else if (option == "error_pages" && errorPages.empty()) {
+    else if (option == "error_pages" && errorPages.empty())
+    {
         if (!mapErrorPages(errorPages, value))
             throw ServerException("Invalid server line", lineNb);
     }
@@ -176,5 +178,7 @@ void Route::fill(std::string const &line, int &lineNb)
             throw ServerException("Invalid server line", lineNb);
     }
     else
+    {
         throw ServerException("Invalid server option", lineNb);
+    }
 }
