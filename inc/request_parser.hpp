@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include	"../inc/Server.hpp"
 
 #define RED "\033[1;31m"
 #define CYA	"\033[36m"
@@ -17,8 +18,15 @@ using	std::map;
 typedef map<string, vector<string> >	mapStrVect;
 typedef map<string, string>						mapStrStr;
 
-class	URI{
+class	Server;
+
+class	URI
+{
 	private:
+		string			request;
+		string			body;
+		bool				closeConnection;
+		bool				headers_parsed;
 		char				method;
 		string			scheme;
 		string			authority;
@@ -28,6 +36,9 @@ class	URI{
 		string			query;
 		string			fragment;
 		size_t			headers_size;
+		bool				isChunked;
+		size_t			chunkSize;
+		bool				expect_continue;
 		mapStrStr		params;
 		mapStrVect	headers;
 
@@ -35,11 +46,14 @@ class	URI{
 
 		//Constructors & Destructors
 		URI();
-		URI(string sche, string auth, string host, size_t prt, string pth, string qry, map<string, string> prms, string fragm, size_t headers_size, map<string, vector<string> > hdrs);
 		URI(URI const &copy);
 		~URI();
 
 		//Getters & Setters
+		string			getRequest()const;
+		string			getBody()const;
+		bool				getCloseConnection()const;
+		bool				getHeadersParsed()const;
 		char				getMethod()const;
 		string			getScheme()const;
 		string			getHost()const;
@@ -49,8 +63,15 @@ class	URI{
 		string			getQuery()const;
 		string			getFragment()const;
 		size_t			getHeadersSize()const;
+		bool				getIsChunked()const;
+		size_t			getChunkSize()const;
+		bool				getExpectContinue()const;
 		mapStrStr		getParams()const;
 		mapStrVect	getHeaders()const;
+		void				setRequest(string &rq);
+		void				setBody(string &bd);
+		void				setCloseConnection(bool close);
+		void				setHeadersParsed(bool parsed);
 		void				setMethod(char mth);
 		void				setScheme(string sche);
 		void				setAuthority(string auth);
@@ -60,6 +81,9 @@ class	URI{
 		void				setQuery(string qry);
 		void				setFragment(string fragm);
 		void				setHeadersSize(size_t size);
+		void				setIsChunked(bool chunked);
+		void				setChunkSize(size_t size);
+		void				setExpectContinue(bool expect);
 		void				setParams(map<string, string> prms);
 		void				setHeaders(map<string, vector<string> > hdrs);
 
@@ -88,6 +112,10 @@ void	determine_uri_form(const string &uri, char *form);
 
 //	../src/request_parser_tester.cpp
 bool	request_testing();
+
+//	../src/read_chunked.cpp
+void	transfer_encoding(URI &rq_uri);
+bool	read_chunked(int &client, URI &rq);
 
 #endif
 

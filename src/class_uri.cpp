@@ -1,23 +1,13 @@
 #include	"../inc/request_parser.hpp"
 
-URI::URI() : scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""), headers_size(0){
+URI::URI() : request(""), body(""), closeConnection(false), headers_parsed(false), scheme(""), authority(""), host(""),
+	port(80), path(""), query(""), fragment(""), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
 }
 
-URI::URI(std::string sche, std::string auth, std::string host, size_t prt,
-		std::string pth, std::string qry, mapStrStr prms,
-		std::string fragm, size_t headers_size, mapStrVect hdrs) :
-	scheme(sche), authority(auth), host(host), port(prt), path(pth), query(qry), fragment(fragm),
-	headers_size(headers_size), params(prms){
-
-	for (mapStrVect::const_iterator it = hdrs.begin(); it != hdrs.end(); ++it) {
-		vector<string> vecCopy(it->second.begin(), it->second.end());
-		headers[it->first] = vecCopy;
-	}
-}
 
 URI::URI(URI const &copy) :
-	scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path),
-	query(copy.query), fragment(copy.fragment), headers_size(copy.headers_size), params(copy.params){
+	request(copy.request), body(copy.body), closeConnection(copy.closeConnection), headers_parsed(copy.headers_parsed), scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path),
+	query(copy.query), fragment(copy.fragment), headers_size(copy.headers_size), isChunked(copy.isChunked), chunkSize(copy.chunkSize), params(copy.params){
 
 	for (mapStrVect::const_iterator it = copy.headers.begin(); it != copy.headers.end(); ++it) {
 		vector<string> vecCopy(it->second.begin(), it->second.end());
@@ -30,6 +20,22 @@ URI::~URI(){
 
 
 //Getters & Setters
+string	URI::getRequest()const{
+	return (request);
+}
+
+string	URI::getBody()const{
+	return (body);
+}
+
+bool	URI::getCloseConnection()const{
+	return (closeConnection);
+}
+
+bool	URI::getHeadersParsed()const{
+	return (headers_parsed);
+}
+
 char	URI::getMethod()const{
 	return (method);
 }
@@ -58,6 +64,18 @@ std::string	URI::getQuery()const{
 	return (query);
 }
 
+bool	URI::getIsChunked()const{
+	return (isChunked);
+}
+
+size_t	URI::getChunkSize()const{
+	return (chunkSize);
+}
+
+bool	URI::getExpectContinue()const{
+	return (expect_continue);
+}
+
 mapStrStr	URI::getParams()const{
 	return (params);
 }
@@ -75,16 +93,32 @@ mapStrVect	URI::getHeaders()const{
 	return (headers);
 }
 
+void	URI::setRequest(string &rq){
+	this->request = rq;
+}
+
+void	URI::setBody(string &bd){
+	this->body = bd;
+}
+
+void	URI::setCloseConnection(bool close){
+	this->closeConnection = close;
+}
+
+void	URI::setHeadersParsed(bool parsed){
+	this->headers_parsed = parsed;
+}
+
 void	URI::setMethod(char mth){
-	method = mth;
+	this->method = mth;
 }
 
 void	URI::setScheme(std::string sche){
-	scheme = sche;
+	this->scheme = sche;
 }
 
 void	URI::setAuthority(std::string auth){
-	authority = auth;
+	this->authority = auth;
 }
 
 void	URI::setHost(std::string host){
@@ -100,28 +134,43 @@ void	URI::setPath(std::string path){
 }
 
 void	URI::setQuery(std::string qry){
-	query = qry;
+	this->query = qry;
+}
+
+void	URI::setIsChunked(bool chunked){
+	this->isChunked = chunked;
+}
+
+void	URI::setChunkSize(size_t size){
+	this->chunkSize = size;
+}
+
+void	URI::setExpectContinue(bool expect){
+	this->expect_continue = expect;
 }
 
 void	URI::setParams(mapStrStr prms){
-	params = prms;
+	this->params = prms;
 }
 
 void	URI::setFragment(std::string fragm){
-	fragment = fragm;
+	this->fragment = fragm;
 }
 
 void	URI::setHeadersSize(size_t size){
-	headers_size = size;
+	this->headers_size = size;
 }
 
 void	URI::setHeaders(mapStrVect hdrs){
-	headers = hdrs;
+	this->headers = hdrs;
 }
 
 //Overloads
 URI	&	URI::operator=(const URI &rhs){
+	this->request = rhs.getRequest();
 	this->method = rhs.getMethod();
+	this->closeConnection = rhs.getCloseConnection();
+	this->headers_parsed = rhs.getHeadersParsed();
 	this->scheme = rhs.getScheme();
 	this->authority = rhs.getAuthority();
 	this->host = rhs.getHost();
@@ -129,6 +178,9 @@ URI	&	URI::operator=(const URI &rhs){
 	this->path = rhs.getPath();
 	this->query = rhs.getQuery();
 	this->headers_size = rhs.getHeadersSize();
+	this->isChunked = rhs.getIsChunked();
+	this->chunkSize = rhs.getChunkSize();
+	this->expect_continue = rhs.getExpectContinue();
 	this->params = rhs.getParams();
 	this->fragment = rhs.getFragment();
 	this->headers = rhs.getHeaders();
@@ -137,7 +189,7 @@ URI	&	URI::operator=(const URI &rhs){
 
 std::ostream & 	operator<<(std::ostream & o, const URI &uri){
 	o << "URI class: \n\tmethod:\t" << uri.getMethod() << "\n\tscheme:\t" << uri.getScheme() << "\n\tauthority:\t" << uri.getAuthority() << "\n\tpath:\t";
-	o << uri.getPath() << "\n\tquery:\t" << uri.getQuery() << "\n\tfragment:\t"<< uri.getFragment() << "\n\n";
+	o << uri.getPath() << "\n\tquery:\t" << uri.getQuery() << "\n\tfragment:\t"<< uri.getFragment() << "\n\tisChunked:\t"<< uri.getIsChunked() << "\n\n";
 
 
 	mapStrVect	hdrs = uri.getHeaders();

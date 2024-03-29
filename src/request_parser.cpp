@@ -4,13 +4,18 @@
 #include	<sstream>
 #include	"../inc/request_parser.hpp"
 
+
+#include	"../inc/Utils.hpp"
+
 #define	MAX_REQUEST_SIZE 
-#define	REQUEST_MIN_LINES 3		//start-line, header, /r/n
+#define	REQUEST_MIN_LINES 3							//start-line, header, /r/n
+#define	CRLFx2						"\r\n\r\n"
 
 using	std::cout;
 
 bool invalid_request(const char *request, URI &rq_uri)
 {
+	cout << RED << ";;;;;;;;;;;;;;;;;;; PARSING HEADERS!!! ;;;;;;;;; " << EOC << std::endl;
 	if (request == nullptr){
 		return (true);
 	}
@@ -36,6 +41,8 @@ bool invalid_request(const char *request, URI &rq_uri)
 		cout << "Request error: Invalid header fields\n";
 		return (true);
 	}
+
+	rq_uri.setHeadersParsed(true);
 	return (false);
 }
 
@@ -162,6 +169,91 @@ bool	invalid_uri(const string &token, URI &rq_uri){
 	}
 	return (false);
 }
+int count_chars(const string& str, char targetChar) {
+    int count = 0;
+    for (string::const_iterator ch = str.begin(); ch != str.end(); ++ch) {
+        if (*ch == targetChar) {
+            count++;
+        }
+    }
+    return count;
+}
+
+vector<string> unite_tokens_between_commas(vector<string> &tokens){
+	if (tokens.size() < 3){
+		return tokens;
+	}
+	size_t	start = 0;
+	size_t	end = 0;
+	size_t	index = 0;
+	bool		firstTime = true;
+	int			count;
+	string	result;
+	vector<string>	line;
+	vector<string>::iterator	jt = tokens.begin(); 
+
+	for (vector<string>::iterator	it = tokens.begin(); it != tokens.end(); ++it){
+		count = count_chars(*it, '"');
+		//cout << CYA << "It = [" << *it << "] index->" << index << " and count ->" << count << EOC << std::endl;
+		if (count > 0 && count % 2 != 0 && index > 0){
+			if (firstTime){
+				start = index;
+				firstTime = false;
+			}
+			else {
+				end = index;
+				firstTime = true;
+			}
+			//cout << CYA << "Start = [" << start << "] end->" << end << EOC << std::endl;
+			if (start > 0 && end > 0 && end > start){
+				for (size_t i = start; i <= end && end <= tokens.size(); ++i){
+					result += jt[i];
+					if (i < end){
+						result += " ";
+					}
+				}
+				//cout << CYA << "****-> Result is ->" << result << EOC << std::endl;
+				line.push_back(result);	
+				result.clear();
+				start = 0;
+				end = 0;
+			}
+		}
+		else {
+			line.push_back(*it);	
+		}
+		++index;
+	}
+	return (line);
+}
+
+vector<string> merge_strings(vector<string> &tokens){
+	size_t	size = 0;
+	string	result;
+	vector<string>	value;
+
+	for (vector<string>::iterator it = tokens.begin(); it != tokens.end(); ++it, ++size){
+		if (it == tokens.begin()){
+			value.push_back(*it);
+		}
+		result += *it;
+		if (size < tokens.size() -1){
+			result += " ";
+		}
+	}
+	value.push_back(result);
+	return (value);
+}
+
+void	insert_values(string const &word, vector<string> &values){
+	vector<string>	splitted;
+	string	coma(",");
+
+	splitted = ft_split(word, coma);
+	for (vector<string>::iterator it = splitted.begin(); it != splitted.end(); ++it){
+		values.push_back(*it);
+	}
+}
 
 bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
 {
@@ -173,55 +265,75 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
 
 	mapStrVect			hdrs;
 	vector<string>	values, line;
-	vector<vector<string> >::const_iterator	it;
+	vector<vector<string> >::iterator	it;
+	string	key;
 	for (it = tokens.begin(); it != tokens.end() && index++ <= rq_uri.getHeadersSize(); ++it){
 		if (it == tokens.begin() || it->size() < 1){
 			continue ;
 		}
-		line = *it;
 
-		if ((pos = line[0].find_first_of(':')) == string::npos){
+		if ((pos = (*it)[0].find_first_of(':')) == string::npos){
 			return (true);
 		}
+		key = (*it)[0].substr(0, pos);
+		std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+		if (key == "USER-AGENT"){
+			line = merge_strings(*it);
+		}
+		else {
+			line = unite_tokens_between_commas(*it);
+		}
+		//cout << "\tHeader Line (size = " << line.size() << "): ->"; 
+		//printContainer(line);
 		switch (line.size()){
 			case 1:
 				if (line[0].size() < 3 || line[0].front() == ':' || line[0].back() == ':' || pos != line[0].find_last_of(':')){
+					cout << RED << "Error on case 1" << EOC << std::endl; 
 					return (true);
 				}
-				values.push_back(line[0].substr(pos+1, line[0].length()));
+				insert_values(line[0].substr(pos+1, line[0].length()), values);
 				break ;
 
 			case 2:
 				if (line[0].size() < 2 || line[0].front() == ':' || line[0].back() != ':' || pos != line[0].find_last_of(':')){
+					cout << RED << "Error on case 2" << EOC << std::endl; 
 					return (true);
 				}
-				values.push_back(line[1]);
+				insert_values(line[1], values);
 				break ;
 
 			default :
 				if (line[0].size() < 2 || line[0].front() == ':' || line[0].back() != ':' || pos != line[0].find_last_of(':')){
+					cout << RED << "Error on case 3" << EOC << std::endl; 
 					return (true);
 				}
 				for (size_t word = 1; word < line.size(); ++word){
+					cout << CYA << "[" << line[word] << "]" << EOC << std::endl; 
 					if (((word == line.size() -1) && (line[word].back() == ',')) ||
 							((word < line.size() - 1) && (line[word].back() != ',' || line[word].size() <= 1))){
+						cout << RED << "Error on case 4" << EOC << std::endl; 
 						return (true);
 					}
 					if (word < line.size() - 1){
-						values.push_back(line[word].substr(0, line[word].size() - 1));
+						insert_values(line[word].substr(0, line[word].size() - 1), values);
 					}
 					else{
-						values.push_back(line[word]);
+						insert_values(line[word], values);
 					}
 				}
 				break ;
 			}
-			hdrs[line[0].substr(0, pos)] = values;
+			hdrs[key] = values;
 			values.clear();
+			key.clear();
 	}
 	if (hdrs.size() == 0){
+		cout << RED << "Error on case 5" << EOC << std::endl; 
 		return (true);
 	}
 	rq_uri.setHeaders(hdrs);
+	transfer_encoding(rq_uri);
 	return (false);
 }
+
+

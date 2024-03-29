@@ -36,5 +36,9 @@ webserv
 *.swp
 *.swo
 *.swn
+*.swk
+*.swm
+*.swl
+*~
 
 .DS_Store
