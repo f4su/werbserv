@@ -336,4 +336,47 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq_uri)
 	return (false);
 }
 
+///////////////////////////Esto es de Joselitoo
+std::string methods[] = {
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "HEAD",
+    "CONNECT",
+    "OPTIONS",
+    "TRACE",
+    "PATCH",
+};
 
+std::string URI::getMethod2() const {
+    return method2;
+}
+
+std::string URI::getUri() const {
+    return uri;
+}
+
+std::string URI::getVersion() const {
+    return version;
+}
+
+std::string URI::getRawBody() const {
+    return rawBody;
+}
+
+HttpStatusCode URI::getStatusCode() const
+{
+    return statusCode;
+}
+
+std::string URI::getContentType() const
+{
+    return contentType;
+}
+
+std::string URI::getBoundary() const
+{
+    return boundary;
+}
+////////////////////////////////////////////////////

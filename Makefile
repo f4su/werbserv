@@ -6,17 +6,19 @@ MAG = \033[1;35m
 EOC = \033[0m
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address -std=c++98
+CFLAGS = -Wall -Wextra -Werror  -std=c++98
 RM = rm -f
 
 SRC_DIR = src
 OBJ_DIR = obj
 
 FILE =	main							\
+		Cgi										\
 		Config								\
 		Route									\
 		server								\
 		Utils									\
+		Response							\
 		ServerException				\
 		request_parser				\
 		request_parser_utils	\
@@ -25,10 +27,10 @@ FILE =	main							\
 		launch_servers				\
 		launch_servers_utils	\
 		read_chunked					\
+		Mime									\
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILE)))
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(FILE)))
-
 
 all : $(NAME)
 
@@ -36,6 +38,11 @@ $(NAME) : $(OBJS)
 	@echo "$(MAG)Compiling...$(EOC)"
 	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "$(GREEN)Compiled! ✅$(EOC)"
+
+change:
+	$(eval CFLAGS += -g3 -fsanitize=address)
+
+sani:  change all
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	@$(CC) $(CFLAGS) -c $< -o $@

@@ -83,7 +83,7 @@ Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, 
         server.fill(line, lineNb);
     }
 	server.print();
-  return server;
+  return (server);
 }
 
 Route Config::parseRoute(std::ifstream &file, std::string &line, int &lineNb, std::stack<state> &stateStack)
@@ -110,7 +110,7 @@ Route Config::parseRoute(std::ifstream &file, std::string &line, int &lineNb, st
         route.fill(line, lineNb);
     }
 	route.print();
-    return route;
+    return (route);
 }
 
 std::string Config::findRoute(std::string line, int lineNb)
@@ -134,21 +134,23 @@ std::string Config::findRoute(std::string line, int lineNb)
     {
         throw ServerException("Invalid route block", lineNb);
     }
-    return path;
+    return (path);
 }
 
 std::vector<Server> Config::getServers()
 {
-    return servers;
+    return (servers);
 }
 
 
-Config::iterator Config::begin() {
-	return servers.begin();
+Config::iterator Config::begin() 
+{
+	return (servers.begin());
 }
 
-Config::iterator Config::end(){
-	return servers.end();
+Config::iterator Config::end()
+{
+	return (servers.end());
 }
 
 /*

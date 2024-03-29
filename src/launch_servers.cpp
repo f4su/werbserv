@@ -130,7 +130,6 @@ void read_connection(int &client, Server &server, URI &rq){
 }
 
 void parse_rq(int &client, Server &server, URI &rq){
-
 	if (rq.getHeadersParsed() == false && 
 			invalid_request(rq.getRequest().c_str(), rq)){
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
@@ -160,6 +159,8 @@ void respond_connection(int &client, Server &server, URI &rq){
 
 	string s_buff = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n";
 	s_buff += rq.getBody();
+	Response	response;
+	///implement response on send
 	if (send(client, s_buff.c_str(), strlen(s_buff.c_str()), 0) == -1){
 		//close connection?
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;

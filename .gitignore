@@ -41,4 +41,7 @@ webserv
 *.swl
 *~
 
+#VScode
+.vscode*
+
 .DS_Store

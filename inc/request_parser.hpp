@@ -4,7 +4,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include	"../inc/Server.hpp"
+#include "../inc/Server.hpp"
+#include "../inc/ServerException.hpp"
 
 #define RED "\033[1;31m"
 #define CYA	"\033[36m"
@@ -41,6 +42,18 @@ class	URI
 		bool				expect_continue;
 		mapStrStr		params;
 		mapStrVect	headers;
+
+////// Esto es de joselito
+		std::string rawBody;
+    std::string uri;
+    std::string version;
+
+		std::string	method2;
+   	HttpStatusCode  statusCode;
+		std::string contentType;
+		std::string	boundary;
+
+///////////////////////////////////////////
 
 	public:
 
@@ -87,8 +100,21 @@ class	URI
 		void				setParams(map<string, string> prms);
 		void				setHeaders(map<string, vector<string> > hdrs);
 
+/////////////Esto es de Joselitoo
+		std::string getRawBody() const;
+    std::string getUri() const;
+    std::string getVersion() const;
+
+		std::string getMethod2() const;
+		HttpStatusCode getStatusCode() const ;
+		std::string getContentType() const;
+		std::string getBoundary() const;
+
+////////////////////////////////////////////////
+
 		//Overloads
 		URI	&operator=(const URI &rhs);
+
 };
 
 //Overloads

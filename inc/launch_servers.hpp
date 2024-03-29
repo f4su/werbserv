@@ -1,6 +1,7 @@
 #ifndef	LAUNCH_SERVERS_HPP
 # define	LAUNCH_SERVERS_HPP
 #include	"Server.hpp"
+#include    "Response.hpp"
 
 #define RED "\033[1;31m"
 #define CYA	"\033[36m"

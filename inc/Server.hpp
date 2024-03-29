@@ -28,6 +28,7 @@ private:
     int             socket;
     int             port;
     uint32_t				host;
+    std::string			host2;
     size_t          clientMaxBodySize;
     bool            allowListing;
     vecStr          serverNames;
@@ -47,6 +48,7 @@ public:
 		vector<int>     getClients() const;
     int             getPort() const;
     uint32_t				getHost() const;
+    std::string			getHost2() const;
 		string					getHostStr()const;
     vecStr          getServerNames() const;
     size_t          getClientMaxBodySize() const;
@@ -78,5 +80,4 @@ public:
     iterator 				end();
     iterator 				find(const string& path);
 		void						remove_client(const int &);
-
 };

@@ -23,7 +23,6 @@ int main(int argc, char **argv)
 	}
 	catch (ServerException &e) {
 		cerr << RED << "\nError: " << e.what() << EOC << std::endl;
-  }
-
+	}
 	return (0);
 }
