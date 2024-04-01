@@ -4,22 +4,20 @@
 
 std::vector<Server> Config::servers;
 
-Config::Config()
-{
+Config::Config(){
 }
 
-Config::~Config()
-{
+Config::~Config(){
 }
 
 void Config::parse(std::string const &configPath)
 {
-    std::ifstream file(configPath.c_str());
-    std::string line;
-    std::stack<state> stateStack;
-    stateStack.push(NONE);
-    int lineNb = 0;
+    std::ifstream				file(configPath.c_str());
+    std::string 				line;
+    std::stack<state> 	stateStack;
+    int 								lineNb = 0;
 
+    stateStack.push(NONE);
     if (!file.is_open())
         throw ServerException("Cannot open config file " + configPath);
     while (std::getline(file, line))

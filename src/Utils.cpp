@@ -1,4 +1,5 @@
 #include "../inc/Utils.hpp"
+#include "../inc/status_codes.hpp"
 
 void trim(std::string & s)
 {
@@ -85,7 +86,7 @@ std::vector<std::string> getFilesInDirectory(std::string const & rootPath, std::
 
     DIR* dir = opendir(directoryPath.c_str());
     if (dir == NULL)
-        throw ServerException(NotFound);
+        throw ServerException(STATUS_404);
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL)
     {
@@ -140,14 +141,14 @@ bool isFile(std::string path)
 void removeFile(std::string path)
 {
     if (std::remove(path.c_str()) != 0)
-        throw ServerException(ServerError);
+        throw ServerException(STATUS_500);	// send()
 }
 
 void removeDirectory(std::string path)
 {
     DIR* dir = opendir(path.c_str());
     if (!dir)
-        throw ServerException(ServerError);
+        throw ServerException(STATUS_500);
 
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL)
@@ -171,13 +172,13 @@ void removeFileOrDirectory(std::string path)
     if (isFile(path))
     {
         removeFile(path);
-        throw ServerException(NoContent);
+        throw ServerException(STATUS_204); // send ()
     }
     else if (isDirectory(path))
     {
         removeDirectory(path);
-        throw ServerException(NoContent);
+        throw ServerException(STATUS_204); // send ()
     }
     else 
-        throw ServerException(NotFound);
+        throw ServerException(STATUS_404); // send()
 }

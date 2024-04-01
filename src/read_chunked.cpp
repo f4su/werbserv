@@ -1,5 +1,6 @@
 #include	"../inc/request_parser.hpp"
 #include	"../inc/launch_servers.hpp"
+#include	"../inc/headers.hpp"
 #include <sys/socket.h>
 #include <sstream>
 
@@ -7,8 +8,6 @@ using	std::cout;
 using	std::cerr;
 
 #define	MAXLINE					1024 //By default, nginx sets client_header_buffer_size to 1 kilobyte (1024 bytes)
-#define	CHUNKED_HEADER	"TRANSFER-ENCODING"
-#define	EXPECT_HEADER		"EXPECT"
 #define	VALID_HEX				"0123456789ABCDEFabcdef"
 #define	CRLF						"\r\n"
 #define	CRLF0x2					"0\r\n\r\n"
@@ -18,21 +17,26 @@ void	transfer_encoding(URI &rq_uri){
 
 	mapStrVect			headers = rq_uri.getHeaders();
 	vector<string>	values;
-	std::cout << "Going to Tranfer encoding!!!" << std::endl;
-	if (headers.find(CHUNKED_HEADER) != headers.end()){
+	std::cout << "Finding Headers!!!" << std::endl;
+	if (headers.find(TRANSFER_ENCODING_H) != headers.end()){
 		std::cout << "Key found!!!" << std::endl;
-		values = headers[CHUNKED_HEADER];
+		values = headers[TRANSFER_ENCODING_H];
 		if (find(values.begin(), values.end(), "chunked") != values.end()){
 			isChunked = true;
 			std::cout << "Is Chunked !!!" << std::endl;
 		}
 	}
-	if (headers.find(EXPECT_HEADER) != headers.end()){
-		std::cout << "Key found!!!" << std::endl;
-		values = headers[EXPECT_HEADER];
+	if (headers.find(EXPECT_H) != headers.end()){
+		std::cout << "Expect Key found!!!" << std::endl;
+		values = headers[EXPECT_H];
 		if (find(values.begin(), values.end(), "100-continue") != values.end()){
 			expectContinue = true;
 			std::cout << "Is Expect: 100-continue!!!" << std::endl;
+		}
+		else {
+			if (rq_uri.getStatusCode().size() == 0){
+				rq_uri.setStatusCode(STATUS_417);
+			}
 		}
 	}
 	rq_uri.setIsChunked(isChunked);

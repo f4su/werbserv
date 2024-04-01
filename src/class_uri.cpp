@@ -1,13 +1,17 @@
 #include	"../inc/request_parser.hpp"
 
-URI::URI() : request(""), body(""), closeConnection(false), headers_parsed(false), scheme(""), authority(""), host(""),
-	port(80), path(""), query(""), fragment(""), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
+URI::URI() : request(""), body(""), statusCode(""),
+	closeConnection(false),
+	scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
+	headers_parsed(false), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
 }
 
 
 URI::URI(URI const &copy) :
-	request(copy.request), body(copy.body), closeConnection(copy.closeConnection), headers_parsed(copy.headers_parsed), scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path),
-	query(copy.query), fragment(copy.fragment), headers_size(copy.headers_size), isChunked(copy.isChunked), chunkSize(copy.chunkSize), params(copy.params){
+	request(copy.request), body(copy.body),
+	closeConnection(copy.closeConnection),
+	scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path), query(copy.query), fragment(copy.fragment), params(copy.params),
+	headers_parsed(copy.headers_parsed), headers_size(copy.headers_size), isChunked(copy.isChunked), chunkSize(copy.chunkSize), expect_continue(copy.expect_continue){
 
 	for (mapStrVect::const_iterator it = copy.headers.begin(); it != copy.headers.end(); ++it) {
 		vector<string> vecCopy(it->second.begin(), it->second.end());
@@ -93,6 +97,10 @@ mapStrVect	URI::getHeaders()const{
 	return (headers);
 }
 
+string	URI::getStatusCode() const{
+    return (this->statusCode);
+}
+
 void	URI::setRequest(string &rq){
 	this->request = rq;
 }
@@ -163,6 +171,10 @@ void	URI::setHeadersSize(size_t size){
 
 void	URI::setHeaders(mapStrVect hdrs){
 	this->headers = hdrs;
+}
+
+void	URI::setStatusCode(string status){
+	this->statusCode = status;
 }
 
 //Overloads

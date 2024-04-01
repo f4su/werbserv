@@ -2,9 +2,9 @@
 #include	"../inc/ServerException.hpp"
 #include	"../inc/request_parser.hpp"
 #include "../inc/launch_servers.hpp"
+#include	"../inc/responding.hpp"
 #include	<unistd.h>
 
-#include <iterator>     // std::advance
 
 #define	MAXLINE		1024	//By default, nginx sets client_header_buffer_size to 1 kilobyte (1024 bytes)
 #define	CRLFx2		"\r\n\r\n"
@@ -31,13 +31,12 @@ void	listening_connections(vector<Server> servers)
 	while (true){
 		fdNow = readfds;
 		cout << MAG << "v...Waiting for connections...v" << EOC << std::endl;
-		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, NULL) < 0){
+		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, NULL) < 0){ //tiene que ser para read y write a la vez
 			close_sockets(servers);
 			throw ServerException("Error when multiplexing with select()");
 		}
 		for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
 			if (handle_sockets(*it, servers, fdNow, readfds, true, 0)){
-				cout << MAG << "Closing WebServ" << EOC << std::endl;
 				break ;
 			}
 			if (!it->getClients().empty()){
@@ -99,10 +98,10 @@ void read_connection(int &client, Server &server, URI &rq){
 		readed = recv(client, request, sizeof(request), 0);
 		if (readed <= 0){
 			if (readed == 0){
-				cerr << CYA << "Connection closed by client" << EOC << std::endl;	// No puede haber una lectura que sea 0 ??
+				cerr << CYA << "Connection closed by client (" << client << " fd)" << EOC << std::endl;	// No puede haber una lectura que sea 0 ??
 			}
 			else {	
-				cerr << RED << "Error: Couldn't read from that client fd" << EOC << std::endl;
+				cerr << RED << "Error: Couldn't read from client (" << client << " fd)" << EOC << std::endl;
 			}
 			rq.setCloseConnection(true);
 			return ;
@@ -130,9 +129,9 @@ void read_connection(int &client, Server &server, URI &rq){
 }
 
 void parse_rq(int &client, Server &server, URI &rq){
-	if (rq.getHeadersParsed() == false && 
-			invalid_request(rq.getRequest().c_str(), rq)){
+	if (rq.getHeadersParsed() == false && invalid_request(rq)){
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
+		respond_connection(client, server, rq);
 		return ;
 	}
 
@@ -145,28 +144,11 @@ void parse_rq(int &client, Server &server, URI &rq){
 	if (rq.getIsChunked()){
 		if (read_chunked(client, rq)){
 			cout << RED << "Error: Invalid Chunked request on server " << server.getPort() << " from client " << client << EOC << std::endl;
-			//send bad request
-			//close sockets?
+			respond_connection(client, server, rq);
 			return ;
 		}
 	}
 	if (rq.getIsChunked() == false){
 		respond_connection(client, server, rq);
 	}
-}
-
-void respond_connection(int &client, Server &server, URI &rq){
-
-	string s_buff = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n";
-	s_buff += rq.getBody();
-	Response	response;
-	///implement response on send
-	if (send(client, s_buff.c_str(), strlen(s_buff.c_str()), 0) == -1){
-		//close connection?
-		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
-		return ;
-	}
-	cout << RED << "Responding!!" << EOC << std::endl;
-	server.getSocket(); //to avoid unused
-	rq.setCloseConnection(true);
 }

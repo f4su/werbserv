@@ -1,0 +1,33 @@
+#ifndef	HEADERS_HPP
+# define	HEADERS_HPP
+
+//	General Headers (for request and response)
+//	#define CACHE_H							"CACHE-CONTROL"					NOT IMPLEMENTED
+#define CONNECTION_H				"CONNECTION"
+//	#define DATE_H							"DATE"									NOT IMPLEMENTED
+//	#define PRAGMA_H						"PRAGMA"								NOT IMPLEMENTED
+//	#define TRAILER_H						"TRAILER"								NOT IMPLEMENTED		
+#define TRANSFER_ENCODING_H	"TRANSFER-ENCODING"					
+#define EXPECT_H						"EXPECT"					
+
+
+//	Request Headers
+#define	HOST_H							"HOST"
+#define	ACCEPT_H						"ACCEPT"
+#define	USER_AGENT_H				"USER-AGENT"
+//	#define	REFERER_H						"REFERER"								NOT IMPLEMENTED
+//	#define	AUTHORIZATION_H			"AUTHORIZATION"					NOT IMPLEMENTED
+
+
+//	Response Headers
+#define	CONTENT_TYPE_H			"CONTENT-TYPE"
+#define	CONTENT_LENGTH_H		"CONTENT-LENGTH"
+//	#define	SERVER_H						"SERVER"								NOT IMPLEMENTED
+//	#define	LAST_MODIFIED_H			"LAST MODIFIED"					NOT IMPLEMENTED
+#define	LOCATION_H					"LOCATION"
+//	#define	WWW_AUTHENTICATE_H	"WWW-AUTHENTICATE"			NOT IMPLEMENTED
+
+#define IMPLEMENTED_HEADERS "CONNECTION TRANSFER-ENCODING EXPECT HOST ACCEPT USER-AGENT CONTENT-TYPE CONTENT-LENGTH LOCATION"
+
+#endif
+

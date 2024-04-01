@@ -4,8 +4,10 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include "../inc/Server.hpp"
-#include "../inc/ServerException.hpp"
+#include "Server.hpp"
+#include "ServerException.hpp"
+
+#include "status_codes.hpp"
 
 #define RED "\033[1;31m"
 #define CYA	"\033[36m"
@@ -24,10 +26,15 @@ class	Server;
 class	URI
 {
 	private:
+		//	Request - Response
 		string			request;
 		string			body;
+   	string			statusCode;
+
+		//	Utils
 		bool				closeConnection;
-		bool				headers_parsed;
+
+		//	URI
 		char				method;
 		string			scheme;
 		string			authority;
@@ -36,22 +43,25 @@ class	URI
 		string			path;
 		string			query;
 		string			fragment;
+		mapStrStr		params;
+
+		//	HEADERS
+		bool				headers_parsed;
 		size_t			headers_size;
 		bool				isChunked;
 		size_t			chunkSize;
 		bool				expect_continue;
-		mapStrStr		params;
 		mapStrVect	headers;
+		
 
 ////// Esto es de joselito
-		std::string rawBody;
-    std::string uri;
-    std::string version;
+		string rawBody;
+    string uri;
+    string version;
 
-		std::string	method2;
-   	HttpStatusCode  statusCode;
-		std::string contentType;
-		std::string	boundary;
+		string	method2;
+		string	contentType;
+		string	boundary;
 
 ///////////////////////////////////////////
 
@@ -81,6 +91,7 @@ class	URI
 		bool				getExpectContinue()const;
 		mapStrStr		getParams()const;
 		mapStrVect	getHeaders()const;
+		string			getStatusCode() const;
 		void				setRequest(string &rq);
 		void				setBody(string &bd);
 		void				setCloseConnection(bool close);
@@ -99,16 +110,16 @@ class	URI
 		void				setExpectContinue(bool expect);
 		void				setParams(map<string, string> prms);
 		void				setHeaders(map<string, vector<string> > hdrs);
+		void				setStatusCode(string status);
 
 /////////////Esto es de Joselitoo
-		std::string getRawBody() const;
-    std::string getUri() const;
-    std::string getVersion() const;
+		string	getRawBody() const;
+    string	getUri() const;
+    string	getVersion() const;
 
-		std::string getMethod2() const;
-		HttpStatusCode getStatusCode() const ;
-		std::string getContentType() const;
-		std::string getBoundary() const;
+		string	getMethod2() const;
+		string	getContentType() const;
+		string	getBoundary() const;
 
 ////////////////////////////////////////////////
 
@@ -121,20 +132,24 @@ class	URI
 std::ostream & 	operator<<(std::ostream &o, const URI &uri);
 
 //	../src/request_parser.cpp
-bool	invalid_request(const char *request, URI &rq_uri);
-bool	invalid_carriage_return(const char *rq, URI &rq_uri);
-void	tokenizer(string &raw_request, vector<vector<string> >	&tokens);
-bool	invalid_start_line(vector<string> const &line, URI &rq_uri);
-bool	invalid_uri(const string &token, URI &rq_uri);
-bool	invalid_header(vector<vector<string> > &tokens, URI &rq_uri);
+bool	invalid_request(URI &rq_uri);
+bool	invalid_carriage_return(URI &rq_uri);
+void	tokenizer(string raw_request, vector<vector<string> >	&tokens);
 
 //	../src/request_parser_utils.cpp
-bool	invalid_chars(const string &path);
 bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_start, size_t f_start, char *form);
 bool	invalid_authority(const string &auth, URI &rq_uri);
 bool	invalid_query_syntax(const string &query, URI &rq_uri);
 bool	invalid_port(const string &port, URI &rq_uri);
+
+//	../src/request_parser_start_line.cpp
+bool	invalid_start_line(vector<string> const &line, URI &rq_uri);
+bool	invalid_uri(const string &token, URI &rq_uri);
+bool	invalid_chars(const string &path);
 void	determine_uri_form(const string &uri, char *form);
+
+//	../src/request_parser_headers.cpp
+bool	invalid_header(vector<vector<string> > &tokens, URI &rq_uri);
 
 //	../src/request_parser_tester.cpp
 bool	request_testing();

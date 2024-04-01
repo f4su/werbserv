@@ -101,16 +101,16 @@ void    Cgi::executeCgi(URI const & req)
 	int fd[2];
 
 	if (pipe(fd) == -1)
-		throw ServerException(ServerError);
+		throw ServerException(STATUS_500);
 	pid_t pid = fork();
 	if (pid == -1)
-		throw ServerException(ServerError);
+		throw ServerException(STATUS_500);
 	int	status;
 	std::string binPath = cgiRoute.getCgi()[getFileExt(filename)];
 	if (pid == 0)
 	{
 		if (dup2(fd[0], 0) == -1 || dup2(fd[1], 1) == -1)
-			throw ServerException(ServerError);
+			throw ServerException(STATUS_500);
 		close(fd[1]);
 		close(fd[0]);
 		char *argv[] = {const_cast<char *>(binPath.c_str()), const_cast<char *>(filename.c_str()), NULL};
@@ -122,7 +122,7 @@ void    Cgi::executeCgi(URI const & req)
 		write(fd[1], req.getRawBody().c_str(), req.getRawBody().size());
 		waitpid(pid, &status, 0);
 		if (WEXITSTATUS(status) != 0)
-			throw ServerException(BadGateway);
+			throw ServerException(STATUS_502);
 		close(fd[1]);
 		char buffer[10240];
 		std::string body;
@@ -153,5 +153,5 @@ void    Cgi::executeCgi(URI const & req)
 		return;
 	}
 	else
-		throw ServerException(ServerError);
+		throw ServerException(STATUS_500);
 }

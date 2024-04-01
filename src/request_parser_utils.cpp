@@ -5,43 +5,6 @@
 
 using	std::cout;
 
-
-bool	invalid_chars(const string &path){
-	string::const_iterator	it;
-	for (it = path.begin(); it != path.end(); ++it){
-		if ((*it < 33) ||									//	Whitespaces
-				(*it == 34) ||								//	"
-				(*it == 60) || (*it == 62) ||	//	< >
-				(*it > 90 && *it < 95) ||			//	[ \ ] ^
-				(*it == 96) ||								//	`
-				(*it > 122 && *it < 126) ||		//	{ | }
-				(*it > 126)){									//	del
-			return (true);
-		}
-	}
-	return (false);
-}
-
-void	determine_uri_form(const string &uri, char *form){
-	//Asterisk	Form must begin with * and cannot be performed with GET, POST or DELETE methods
-	//Origin 		Form begins with /
-	//Authority	Form must start with the IP/Domain Name
-	//Absolute	Form must have http://	(we are going to implement only http scheme)
-
-	if (uri.find("http://") == 0){
-		*form = 'a';
-	}
-	else if (uri[0] == '/'){
-		*form = 'o';
-	}
-	else if (uri[0] == '*'){
-		*form = 'u';
-	}
-	else {
-		*form = 'y';
-	}
-}
-
 bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_start, size_t f_start, char *form){
 
 	//Authority (optinal) must begin with // and end with /, ?, # or the end of the URI. It doesn't appear in origin form
@@ -57,7 +20,7 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 		cout << "Authority iss -> " << rq_uri.getAuthority() << "\n";
 		//check auth syntax & port
 		if (invalid_authority(rq_uri.getAuthority(), rq_uri)){
-			cout << "\n\tRequest error: Invalid URI authority syntax\n";
+			cout << RED << std::endl << "\tRequest error: Invalid URI authority syntax" << EOC << std::endl;
 			return (true);
 		}
 	}
@@ -75,7 +38,7 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 		}
 	}
 	else if (*form != 'y') {
-		cout << "\n\tRequest error: URI without path\n";
+		cout << RED << std::endl << "\tRequest error: URI without path" << EOC << std::endl;
 		return (true);
 	}
 
@@ -84,9 +47,8 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 		f_start != string::npos ? rq_uri.setQuery(token.substr(pr_start, f_start - pr_start)) :
 			rq_uri.setQuery(token.substr(pr_start, token.size() - pr_start));
 		//check params syntax
-		if (invalid_query_syntax(rq_uri.getQuery(), rq_uri))
-		{
-			cout << "\n\tRequest error: Invalid URI params/query\n";
+		if (invalid_query_syntax(rq_uri.getQuery(), rq_uri)) {
+			cout << RED << std::endl << "\tRequest error: Invalid URI params/query" << std::endl;
 			return (true);
 		}
 	}
@@ -169,3 +131,4 @@ bool	invalid_query_syntax(const string &query, URI &rq_uri){
 	rq_uri.setParams(prms);
 	return (false);
 }
+

@@ -11,10 +11,6 @@ ServerException::ServerException(std::string const &msg, int line) throw() : msg
     this->msg += ss.str();
 }
 
-ServerException::ServerException(HttpStatusCode code) throw() : code(code)
-{
-}
-
 ServerException::~ServerException() throw()
 {
 }
@@ -22,9 +18,4 @@ ServerException::~ServerException() throw()
 const char *ServerException::what() const throw()
 {
     return (this->msg.c_str());
-}
-
-HttpStatusCode ServerException::getCode() const throw()
-{
-    return (this->code);
 }
