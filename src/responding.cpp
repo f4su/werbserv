@@ -1,6 +1,8 @@
 #include	"../inc/responding.hpp"
 #include	"../inc/headers.hpp"
+#include	"../inc/launch_servers.hpp"
 #include	"../inc/Utils.hpp"
+#include	"../inc/Response.hpp"
 
 #define	CRLF			"\r\n"
 #define	CRLFx2		"\r\n\r\n"
@@ -28,6 +30,22 @@ void check_body_size(Server &server, URI &rq){
 }*/
 
 void respond_connection(int &client, Server &server, URI &rq){
+	Response	response(rq);
+
+	response.handleResponse(server);
+	std::string res = response.getResponse();
+	cerr << RED << "PRE SEND " << client << EOC << std::endl;
+	//cerr << CYA << "responseeeeeeeee[" << displayHiddenChars(res) << "]" << EOC << std::endl;
+	int test = send(client, res.c_str(), sizeof(res.c_str()), 0);
+
+	cerr << CYA << "responseeeeeeeee[\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
+	cerr << CYA << test << EOC << std::endl;
+	if (test == -1)
+	{
+		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
+	}
+	cerr << RED << "POST SEND " << client << EOC << std::endl;
+
 
 	/*
 	check_body_size(server, rq);
