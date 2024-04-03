@@ -15,7 +15,7 @@ void respond_connection(int &client, Server &server, URI &rq){
 
 
 	cout << "\tStatus is->[" << rq.getStatusCode() << "]" << std::endl;
-	string	parseErrs("400 405 406 411 413 414 415 417 501 505");
+	string	parseErrs("400 404 405 406 409 411 413 414 415 417 500 501 502 505 507");
 	string	status(rq.getStatusCode());
 	status = status.size() > 0 ? status.substr(0, 3) : status;
 	if (status.size() > 0  && parseErrs.find(status) != string::npos){
