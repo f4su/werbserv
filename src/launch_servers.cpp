@@ -93,6 +93,7 @@ bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_s
 			return (true);
 		}//
 		read_connection(socket, server, server.getClientUri().at(client));
+		
 		if (server.getClientUri().at(client).getCloseConnection()){
 			//keep connection alive ? si hay el header
 			close_client_connection(client, server, servers, ready);

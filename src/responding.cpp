@@ -11,7 +11,7 @@
 
 
 void respond_connection(int &client, Server &server, URI &rq){
-	check_body_size(server, rq);
+/*	check_body_size(server, rq);
 
 
 	cout << "\tStatus is->[" << rq.getStatusCode() << "]" << std::endl;
@@ -27,25 +27,21 @@ void respond_connection(int &client, Server &server, URI &rq){
 		if (send(client, response.c_str(), response.size(), 0) == -1){
 			cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		}
-	}
-
-	/*		JOSELITOOO
+	}*/
+	//		JOSELITOOO
 	Response	response(rq);
 
 	response.handleResponse(server);
-	string res = response.getResponse();
-	cerr << RED << "PRE SEND " << client << EOC << std::endl;
+	std::string res = response.getResponse();
+	//cerr << RED << "PRE SEND " << client << EOC << std::endl;
 	//cerr << CYA << "responseeeeeeeee[" << displayHiddenChars(res) << "]" << EOC << std::endl;
-	int test = send(client, res.c_str(), sizeof(res.c_str()), 0);
+	int test = send(client, res.c_str(), res.size(), 0);
 
-	cerr << CYA << "responseeeeeeeee[\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
-	cerr << CYA << test << EOC << std::endl;
+	cerr << CYA << "\nRESPONSE>:\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
+	//cerr << CYA << test << EOC << std::endl;
 	if (test == -1)
-	{
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
-	}
-	cerr << RED << "POST SEND " << client << EOC << std::endl;
-	*/
+	//cerr << RED << " SEND " << client << EOC << std::endl;
 
 	cout << RED << "Responding client " << client << " !!" << EOC << std::endl;
 	rq.setCloseConnection(true);

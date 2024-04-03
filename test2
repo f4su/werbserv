@@ -47,5 +47,5 @@
     client_max_body_size = 100000
     error_pages = 404:www/error_pages/404.html
     root = www
-    index = idk.html
+    index = index.html
 </server>

@@ -184,6 +184,7 @@ Server Response::getServer()
 void Response::readContent(std::string const &filePath, string code)
 {
     std::ifstream file(filePath);
+    std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(std::string const &filePath, string code)" << EOC << std::endl;
 
     if (file.is_open())
     {
@@ -205,6 +206,7 @@ void Response::readContent(std::string const &filePath, string code)
 void Response::handleGet(Server &server, Route const & route)
 {
     std::string filePath = getFilePath(server, route);
+    std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleGet(Server &server, Route const & route)" << EOC << std::endl;
     if (isListing)
         return;
     removeConsecutiveChars(filePath, '/');
@@ -245,6 +247,7 @@ std::string Response::tryFiles(Server const & server, Route const & route, std::
         }
         file.close();
     }
+    std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, std::string & root)" << EOC << std::endl;
     if (route.getRouteType() != Route::FILE)
         throw ServerException(STATUS_404);// TO DO: Mirar qué error mandar
     throw ServerException(STATUS_404);
@@ -277,6 +280,7 @@ std::string Response::getFilePath(Server const & server, Route const & route)
 void Response::handleDelete(Server &server, Route const & route)
 {
     std::string filePath = getFilePath(server, route);
+    std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleDelete(Server &server, Route const & route)" << EOC << std::endl;
     removeConsecutiveChars(filePath, '/');
     if (!route.getCgi().empty())
     {
@@ -360,6 +364,7 @@ void Response::handlePost(Server &server, Route const & route)
     if (!route.getCgi().empty())
     {
         std::string filePath = getFilePath(server, route);
+         std::cout << CYA << "FILEPATH IS : " << filePath << " <---handlePost(Server &server, Route const & route)" << EOC << std::endl;
         removeConsecutiveChars(filePath, '/');
         Cgi cgi(route, filePath, *request);
         std::map<std::string, std::string> Cgiheaders = cgi.getResponseHeaders();
@@ -385,9 +390,9 @@ std::string Response::getResponse()
     std::stringstream ss;
 
     ss << "HTTP/1.1 " << "200 OK" << "\r\n";
-    ss << "Content-type: " << "text/html\r\n";
-    //ss << "Server: webserv/1.0\r\n";
-    //ss << "Date: " << getDateGMT() << "\r\n";
+    ss << "Content-Type: " << "text/html; charset=UTF-8\r\n";
+    ss << "Server: webserv/1.0\r\n";
+    ss << "Date: " << getDateGMT() << "\r\n";
     ss << "Content-Length: " << toString(body.size()) << "\r\n";
     for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
         ss << it->first << ": " << it->second << "\r\n";
@@ -412,11 +417,20 @@ void Response::handleResponse(Server &server)
             throw ServerException(code);
         Route route = getRoute(server);
         if (request->getMethod2() == "GET")
+        {
             handleGet(server, route);
+            //std::cout << RED << "IN GET "<< EOC << std::endl;
+        }
         else if (request->getMethod2() == "POST")
+        {
             handlePost(server, route);
+            //std::cout << RED << "IN POST "<< EOC << std::endl;
+        }
         else if (request->getMethod2() == "DELETE")
-           handleDelete(server, route);
+        { 
+            handleDelete(server, route);
+            //std::cout << RED << "IN POST "<< EOC << std::endl;
+        }
         else
             throw ServerException(STATUS_501);			//TO DO: Todo lo que sean throws, convertirlos en send
     }
@@ -426,12 +440,18 @@ void Response::handleResponse(Server &server)
         int c;
         std::stringstream    ss(code.substr(0, 3));
         ss >> c;
+        std::cout << CYA << "///////////////////////1st C IS 1: " << c << EOC << std::endl;
+        std::cout << CYA << "///////////////////////1st CODE IS 1: " << code << EOC << std::endl;
+        //std::cout << CYA << "///////////////////////1st SS IS 1: " << ss << EOC << std::endl;
+        std::cout << CYA << "///////////////////////1st FILEPATH IS 1: " << server.getErrorPages()[c] << EOC << std::endl;
         readContent(server.getErrorPages()[c], code);
+        //readContent(404, "404 Not Found");
     }
     catch (std::exception & e)
     {
         code = STATUS_500;
         int c = 500;
+        std::cout << CYA << "///////////////////////FILEPATH IS 2 : " << server.getErrorPages()[c] << EOC << std::endl;
         readContent(server.getErrorPages()[c], code);
     }
 }
