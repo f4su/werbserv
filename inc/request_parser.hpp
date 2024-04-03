@@ -132,7 +132,7 @@ class	URI
 std::ostream & 	operator<<(std::ostream &o, const URI &uri);
 
 //	../src/request_parser.cpp
-bool	invalid_request(URI &rq_uri);
+bool	invalid_request(URI &rq, Server &server);
 bool	invalid_carriage_return(URI &rq_uri);
 void	tokenizer(string raw_request, vector<vector<string> >	&tokens);
 
@@ -143,13 +143,15 @@ bool	invalid_query_syntax(const string &query, URI &rq_uri);
 bool	invalid_port(const string &port, URI &rq_uri);
 
 //	../src/request_parser_start_line.cpp
-bool	invalid_start_line(vector<string> const &line, URI &rq_uri);
-bool	invalid_uri(const string &token, URI &rq_uri);
+bool	invalid_start_line(vector<string> const &line, URI &rq_uri, Server &server);
+bool	invalid_method(string const &method, URI &rq);
+bool	invalid_uri(const string &token, URI &rq_uri, Server &server);
 bool	invalid_chars(const string &path);
-void	determine_uri_form(const string &uri, char *form);
+bool	determine_uri_form(const string &uri, char *form);
+bool	invalid_method_in_route(URI &rq, Server &server);
 
 //	../src/request_parser_headers.cpp
-bool	invalid_header(vector<vector<string> > &tokens, URI &rq_uri);
+bool	invalid_header(vector<vector<string> > &tokens, URI &rq_uri, Server &server);
 
 //	../src/request_parser_tester.cpp
 bool	request_testing();

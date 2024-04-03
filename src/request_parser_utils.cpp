@@ -7,6 +7,7 @@ using	std::cout;
 
 bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_start, size_t f_start, char *form){
 
+	cout << "Form iss -> [" << form << "]" << std::endl;
 	//Authority (optinal) must begin with // and end with /, ?, # or the end of the URI. It doesn't appear in origin form
 	if ((*form == 'a' && p_start !=  string::npos) ||
 			(*form == 'y')){
@@ -17,7 +18,7 @@ bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_
 		else{
 			rq_uri.setAuthority(token);
 		}
-		cout << "Authority iss -> " << rq_uri.getAuthority() << "\n";
+		cout << "Authority iss -> " << rq_uri.getAuthority() << std::endl;
 		//check auth syntax & port
 		if (invalid_authority(rq_uri.getAuthority(), rq_uri)){
 			cout << RED << std::endl << "\tRequest error: Invalid URI authority syntax" << EOC << std::endl;
@@ -66,6 +67,7 @@ bool	invalid_authority(const string &auth, URI &rq_uri){
 	size_t	ipV6in = auth.find("[");
 	size_t	ipV6out = auth.find("]");
 	
+	cout << CYA << "Auth is [" << auth << "]" << EOC << std::endl;
 	if (auth.size() < 1 || auth.front() == ':' ||
 			(ipV6in != string::npos && auth.size() < 3) ||
 			(ipV6in != string::npos && ipV6in != 0) ||
@@ -94,6 +96,7 @@ bool	invalid_port(const string &port, URI &rq_uri){
 	std::stringstream ss(port); 
 	int num;
 
+	cout << RED << "Port is [" << port << "]" << EOC << std::endl;
 	if (port.find_first_not_of("0123456789") != string::npos){
 		return (true);
 	}

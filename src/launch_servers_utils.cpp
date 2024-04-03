@@ -79,6 +79,7 @@ std::string displayHiddenChars(string& str) {
 void	calculate_max(vector<Server> &servers){
 	int	max = 0;
 
+	cout << MAG << "CALCULATING MAX---->" << EOC << std::endl;
 	if (servers.empty()){
 		return ;
 	}
@@ -86,8 +87,12 @@ void	calculate_max(vector<Server> &servers){
 		if (it->getSocket() > max){
 			max = it->getSocket();
 		}
+
+		cout << MAG << "Socket---->" << it->getSocket() << EOC << std::endl;
 		if (!it->getClients().empty()){
 			vector<int> clients = it->getClients();
+			cout << MAG << "CLieeents---->" << EOC << std::endl;
+			printContainer(clients);
 			for (vector<int>::iterator jt = clients.begin(); jt != clients.end(); ++jt){
 				if (*jt > max){
 					max = *jt;
@@ -95,6 +100,7 @@ void	calculate_max(vector<Server> &servers){
 			}
 		}
 	}
+	cout << MAG << "CALCULATING MAX END---->" << EOC << std::endl;
 	servers[0].setMax(max);
 }
 

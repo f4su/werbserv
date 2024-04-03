@@ -2,7 +2,7 @@
 
 URI::URI() : request(""), body(""), statusCode(""),
 	closeConnection(false),
-	scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
+	method('u'), scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
 	headers_parsed(false), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
 }
 
@@ -10,7 +10,7 @@ URI::URI() : request(""), body(""), statusCode(""),
 URI::URI(URI const &copy) :
 	request(copy.request), body(copy.body),
 	closeConnection(copy.closeConnection),
-	scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path), query(copy.query), fragment(copy.fragment), params(copy.params),
+	method(copy.method), scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path), query(copy.query), fragment(copy.fragment), params(copy.params),
 	headers_parsed(copy.headers_parsed), headers_size(copy.headers_size), isChunked(copy.isChunked), chunkSize(copy.chunkSize), expect_continue(copy.expect_continue){
 
 	for (mapStrVect::const_iterator it = copy.headers.begin(); it != copy.headers.end(); ++it) {

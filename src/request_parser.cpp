@@ -11,8 +11,7 @@
 
 using	std::cout;
 
-bool invalid_request(URI &rq)
-{
+bool	invalid_request(URI &rq, Server &server){
 	cout << RED << ";;;;;;;;;;;;;;;;;;; PARSING HEADERS!!! ;;;;;;;;; " << EOC << std::endl;
 	if (rq.getRequest().size() < 1){
 		cout << RED << "Server Error: Couldn't read the request" << EOC << std::endl;
@@ -34,10 +33,10 @@ bool invalid_request(URI &rq)
 		rq.setStatusCode(STATUS_400);
 		return (true);
 	}
-	if (invalid_start_line(tokens[0], rq)){
+	if (invalid_start_line(tokens[0], rq, server)){
 		return (true);
 	}
-	if (invalid_header(tokens, rq)){
+	if (invalid_header(tokens, rq, server)){
 		cout << RED << "Request error: Invalid header fields" << EOC << std::endl;
 		return (true);
 	}

@@ -90,51 +90,76 @@ void	insert_values(string const &word, vector<string> &values){
 	}
 }
 
-/*
-bool	check_headers_values(mapStrVect &hdrs, URI &rq){
-	string	valid_hdrs(IMPLEMENTED_HEADERS);
-	bool		hostHdr = false;
-	vector<string>	values;
+bool	check_headers_values(URI &rq, Server &server){
+	string					valid_hdrs(IMPLEMENTED_HEADERS), key;
+	mapStrVect			hdrs = rq.getHeaders();
+	bool						hostHdr = false;
+	vector<string>	values, hosts = server.getServerNames();
+	size_t					port = 80;
 
 	for (mapStrVect::iterator	it = hdrs.begin(); it != hdrs.end(); ++it){
-		if (valid_hdrs.find(it->first) != string::npos){
-			switch (it->first){
-				case CONNECTION_H:
-					break ;
-				case TRANSFER_ENCODING_H:
-					break ;
-				case EXPECT_H:
-					values = headers[EXPECT_H];
-					break ;
-				case HOST_H:
-					hostHdr = true;
-					break ;
-				case ACCEPT_H:
-					break ;
-				case USER_AGENT_H:
-					break ;
-				case CONTENT_TYPE_H:
-					break ;
-				case CONTENT_LENGTH_H:
-					values = headers[EXPECT_H];
-					
-					break ;
-				case LOCATION_H:
-					break ;
+		values = hdrs[it->first];
+		key = it->first;
+		if (valid_hdrs.find(it->first) == string::npos) continue ;
+		if (key == TRANSFER_ENCODING_H){
+				if (find(values.begin(), values.end(), "chunked") != values.end()){
+					rq.setIsChunked(true);
+				}
+		}
+		else if (key == EXPECT_H){
+				if (values.size() == 1 && find(values.begin(), values.end(), "100-continue") != values.end()){
+					rq.setExpectContinue(true);
+				}
+				else {
+					cout << RED << "Error: Expect value not implemented (417 Expectation Failed)" << EOC << std::endl; 
+					rq.setStatusCode(STATUS_417);
+					return (true);
+				}
 			}
+		else if (key == HOST_H){
+			if (values.size() == 1){
+				size_t pos = values[0].find(":");
+				if (std::count(values[0].begin(), values[0].end(), ':') > 1 || pos == 0 || values[0].back() == ':'){
+					cout << RED << "Error: Invalid Host (400)" << EOC << std::endl; 
+					rq.setStatusCode(STATUS_400);
+					return (true);
+				}
+				if (pos != string::npos){
+					rq.setHost(values[0].substr(0, pos));
+					std::stringstream ss(values[0].substr(values[0].find(":") + 1, values[0].size()));
+					ss >> port;
+					if (ss.fail()){
+						cout << RED << "Error: Couldn't convert host port header string to nb (500)" << EOC << std::endl; 
+						rq.setStatusCode(STATUS_500);
+						return (true);
+					}
+					rq.setPort(port);
+					cout << RED << "Port: [" << rq.getPort() << "]" << EOC << std::endl; 
+				}
+				else {
+					rq.setHost(values[0]);
+				}
+			}
+			if (values.size() != 1 || find(hosts.begin(), hosts.end(), rq.getHost()) == hosts.end()){
+				cout << RED << "Error: Host header doesn't match Server Names (400)" << EOC << std::endl; 
+				rq.setStatusCode(STATUS_400);
+				return (true);
+			}
+			hostHdr = true;
 		}
 	}
 	if (hostHdr == false){
 		rq.setStatusCode(STATUS_400);
+		cout << RED << "Error: Host header not detected" << EOC << std::endl; 
 		return (true);
 	}
 	return (false);
-}*/
+}
 
 //rfc7230 says that no whitespace is accepted between field-name and :
 //Therefore, this is the syntax:			field-name: OWS field-content OWS
 //OWS = Optional WhiteSpace						/r/n
-bool invalid_header(vector<vector<string> > &tokens, URI &rq)
+bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 {
 	size_t															pos = 0, index = 0;
 	mapStrVect													hdrs;
@@ -210,10 +235,10 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq)
 		return (true);
 	}
 	rq.setHeaders(hdrs);
-	/*if (check_headers_values(rq.getHeaders())){
+	if (check_headers_values(rq, server)){
 		cout << RED << "Error on headers values" << EOC << std::endl; 
 		return (true);
-	}*/
-	transfer_encoding(rq);
+	}
+	//transfer_encoding(rq);
 	return (false);
 }
