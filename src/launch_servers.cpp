@@ -8,6 +8,7 @@
 
 #define	MAXLINE		1024	//By default, nginx sets client_header_buffer_size to 1 kilobyte (1024 bytes)
 #define	CRLFx2		"\r\n\r\n"
+#define	HTTPS			"\x00\n\x00\n"
 #define	CONTINUE	"HTTP/1.1 100 Continue"
 
 typedef vector<int>::iterator vecIntIt;
@@ -31,6 +32,18 @@ void	listening_connections(vector<Server> servers)
 	while (true){
 		fdNow = readfds;
 		cout << MAG << "v...Waiting for connections...v" << EOC << std::endl;
+		cout << MAG << "MAX->" << servers[0].getMax() << EOC << std::endl;
+
+		for (vector<Server>::iterator	it = servers.begin(); it != servers.end(); ++it){
+			cout << MAG << "Socket---->" << it->getSocket() << EOC << std::endl;
+			if (!it->getClients().empty()){
+				vector<int> clients = it->getClients();
+				cout << MAG << "CLieeents---->" << EOC << std::endl;
+				printContainer(clients);
+			}
+		}
+
+
 		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, NULL) < 0){ //tiene que ser para read y write a la vez
 			close_sockets(servers);
 			throw ServerException("Error when multiplexing with select()");
@@ -94,7 +107,7 @@ void read_connection(int &client, Server &server, URI &rq){
 
 	if (server.getClientUri().at(client).getIsChunked() == false){
 		memset(request, 0, MAXLINE);
-		cerr << RED << "Going to read request" << EOC << std::endl;	
+		cerr << RED << "Going to read request (client " << client << ")" << EOC << std::endl;	
 		readed = recv(client, request, sizeof(request), 0);
 		if (readed <= 0){
 			if (readed == 0){
@@ -118,6 +131,7 @@ void read_connection(int &client, Server &server, URI &rq){
 
 	}
 	size_t	crlf = rq.getRequest().find(CRLFx2);
+	//size_t	https = rq.getRequest().find(HTTPS);
 	if (crlf != string::npos){
 		if (rq.getRequest().size() > crlf + 4){
 			string body = rq.getRequest().substr(crlf + 4, rq.getRequest().size());
@@ -126,10 +140,15 @@ void read_connection(int &client, Server &server, URI &rq){
 		}
 		parse_rq(client, server, server.getClientUri().at(client)); 
 	}
+	/*
+	else if (https != string::npos){
+		server.getClientUri().at(client).setStatusCode(STATUS_505); 
+		respond_connection(client, server, server.getClientUri().at(client)); 
+	}*/
 }
 
 void parse_rq(int &client, Server &server, URI &rq){
-	if (rq.getHeadersParsed() == false && invalid_request(rq)){
+	if (rq.getHeadersParsed() == false && invalid_request(rq, server)){
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 		respond_connection(client, server, rq);
 		return ;

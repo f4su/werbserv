@@ -1,10 +1,11 @@
 #include	"../inc/request_parser.hpp"
+#include	"../inc/headers.hpp"
 
 #define	MAX_URI_SIZE	2000		//Based on Chrome
 
 using	std::cout;
 
-bool invalid_start_line(vector<string> const &line, URI &rq){
+bool invalid_start_line(vector<string> const &line, URI &rq, Server &server){
 	//Checking total tokens
 	if (line.size() != 3){
 		cout << RED << "Request Error: Invalid start-line tokens" << EOC << std::endl;
@@ -20,31 +21,46 @@ bool invalid_start_line(vector<string> const &line, URI &rq){
 	}
 
 	//Checking method token
-	char	mth;
-	line[0] == "GET" ? mth = 'g' :
-		line[0] == "POST" ? mth = 'p' : 
-		line[0] == "DELETE" ? mth = 'd' :
-		mth = 'u';
-	if (mth == 'u'){
-		cout << RED << "Request error: Invalid HTTP protocol version" << EOC << std::endl;
-		rq.setStatusCode(STATUS_405);
+	if (invalid_method(line[0], rq)){
 		return (true);
 	}
 
 	//Checking URI tokens
-	rq.setMethod(mth);
 	if (line[1].size() > MAX_URI_SIZE){
 		rq.setStatusCode(STATUS_414);
+		cout << RED << std::endl << "\tRequest error: URI too long" << EOC << std::endl;
 		return (true);
 	}
-	if (invalid_uri(line[1], rq)){
+	if (invalid_uri(line[1], rq, server)){
 		rq.setStatusCode(STATUS_400);
 		return (true);
 	}
 	return (false);
 }
 
-bool	invalid_uri(const string &token, URI &rq){
+bool	invalid_method(string const &method, URI &rq){
+	string	all_mth(ALL_METHODS);
+	char	mth;
+
+	mth = method == "GET" ? 'g' :
+		method == "POST" ? 'p' : 
+		method == "DELETE" ? 'd' :
+		'u';
+	if (mth == 'u'){
+		if (all_mth.find(method) == string::npos){
+			cout << RED << "Request error: HTTP method doesn't exist (400)" << EOC << std::endl;
+			rq.setStatusCode(STATUS_400);
+			return (true);
+		}
+		cout << RED << "Request error: Method not implemented (501)" << EOC << std::endl;
+		rq.setStatusCode(STATUS_501);
+		return (true);
+	}
+	rq.setMethod(mth);
+	return (false);
+}
+
+bool	invalid_uri(const string &token, URI &rq, Server &server){
 	if (invalid_chars(token)){
 		cout << RED << std::endl << "\tRequest error: Invalid URI (not properly encoded)" << EOC << std::endl;
 		return (true);
@@ -53,9 +69,7 @@ bool	invalid_uri(const string &token, URI &rq){
 	cout << "URI to check is: [" << token << "]" << std::endl;
 	//We need to determine the URI form: origin (o), absolute (a), authority (y) or asterisk
 	char	form = 'u'; //u = undefined
-	determine_uri_form(token, &form);
-	if (form == 'u'){
-		cout << RED << std::endl << "\tRequest error: Invalid URI form" << EOC << std::endl;
+	if (determine_uri_form(token, &form)){
 		return (true);
 	}
 
@@ -93,6 +107,10 @@ bool	invalid_uri(const string &token, URI &rq){
 	if (invalid_values(token, rq, path_start, params_start, frag_start, &form)){
 			return (true);
 	}
+
+	if (invalid_method_in_route(rq, server)){
+			return (true);
+	}
 	return (false);
 }
 
@@ -112,7 +130,7 @@ bool	invalid_chars(const string &path){
 	return (false);
 }
 
-void	determine_uri_form(const string &uri, char *form){
+bool	determine_uri_form(const string &uri, char *form){
 	//Asterisk	Form must begin with * and cannot be performed with GET, POST or DELETE methods
 	//Origin 		Form begins with /
 	//Authority	Form must start with the IP/Domain Name
@@ -125,10 +143,31 @@ void	determine_uri_form(const string &uri, char *form){
 		*form = 'o';
 	}
 	else if (uri[0] == '*'){
-		*form = 'u';
+		cout << RED << std::endl << "\tRequest error: Invalid URI form" << EOC << std::endl;
+		return (true);
 	}
 	else {
 		*form = 'y';
 	}
+	return (false);
 }
 
+bool	invalid_method_in_route(URI &rq, Server &server){
+	char						mth = rq.getMethod();
+	string					method;
+	vector<string>	route_mths;
+	vector<Route>		routes = server.getRoutes();
+
+	method = mth == 'g' ? "GET" : mth == 'p' ? "POST" : mth == 'd' ? "DELETE" : "";
+	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
+		route_mths = it->getMethods();
+		if (it->getPath() == rq.getPath()){
+			if (std::find(route_mths.begin(), route_mths.end(), method) == route_mths.end()){
+				rq.setStatusCode(STATUS_501);
+				cout << RED << std::endl << "\tRequest error: Method not implemented on path (501)" << EOC << std::endl;
+				return (true);
+			}
+		}
+	}
+	return (false);
+}

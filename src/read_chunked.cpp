@@ -8,10 +8,10 @@ using	std::cout;
 using	std::cerr;
 
 #define	MAXLINE					1024 //By default, nginx sets client_header_buffer_size to 1 kilobyte (1024 bytes)
-#define	VALID_HEX				"0123456789ABCDEFabcdef"
 #define	CRLF						"\r\n"
 #define	CRLF0x2					"0\r\n\r\n"
 
+/*
 void	transfer_encoding(URI &rq_uri){
 	bool	isChunked = false, expectContinue = false;
 
@@ -41,7 +41,7 @@ void	transfer_encoding(URI &rq_uri){
 	}
 	rq_uri.setIsChunked(isChunked);
 	rq_uri.setExpectContinue(expectContinue);
-}
+}*/
 
 bool invalid_chunk(URI &rq){
 	size_t	size = rq.getChunkSize();
@@ -53,19 +53,19 @@ bool invalid_chunk(URI &rq){
 	while(size != 0){
 		size_t newLine = readed.find(CRLF, size);
 		if (newLine == string::npos || newLine == 0){
+			rq.setStatusCode(STATUS_400);
 			cout << RED << "Error: Hex Chunk size not found" << EOC << std::endl;
 			return (true);
 		}
 		string sizeStr(readed.begin() + lastLoopIndex, readed.begin() + newLine);
 		cout << "SizeStr is ->[" << sizeStr << "]" << std::endl;
-		string hexValues(VALID_HEX);
-		for (string::iterator it = sizeStr.begin(); it != sizeStr.end(); ++it){
-			if (std::find(hexValues.begin(), hexValues.end(), *it) == hexValues.end()){
-				cout << RED << "Error: Couldn't convert hex to decimal" << EOC << std::endl;
-				return (true);
-			}
+		std::stringstream	ss(sizeStr);
+		ss >> std::hex >> size;
+		if (ss.fail()){
+			rq.setStatusCode(STATUS_500);
+			cout << RED << "Error: Couldn't convert hex to decimal" << EOC << std::endl;
+			return (true);
 		}
-		std::stringstream(sizeStr) >> std::hex >> size;
 		//Delete first line
 		readed.erase(readed.begin() + lastLoopIndex , readed.begin() + newLine + 2);
 		cout << CYA << "ErasedStr" << EOC << " is ->[\n" << displayHiddenChars(readed) << "]" << std::endl;
@@ -73,6 +73,7 @@ bool invalid_chunk(URI &rq){
 		//Delete end CRLF
 		if (size > 0){
 			if (readed.size() < size || readed[size] != '\r' || readed[size + 1] != '\n'){
+				rq.setStatusCode(STATUS_400);
 				cout << RED << "Error: at the end of the chunk" << EOC << std::endl;
 				return (true);
 			}
@@ -80,6 +81,7 @@ bool invalid_chunk(URI &rq){
 		}
 		else {
 			if (readed.size() != lastLoopIndex + 2){
+				rq.setStatusCode(STATUS_400);
 				cout << RED << "Error: at the end of the chunked request" << EOC << std::endl;
 				return (true);
 			}
