@@ -39,6 +39,7 @@ void	transfer_encoding(URI &rq_uri){
 			}
 		}
 	}
+		std::cout << "Finded Headers!!!" << std::endl;
 	rq_uri.setIsChunked(isChunked);
 	rq_uri.setExpectContinue(expectContinue);
 }*/

@@ -1,20 +1,18 @@
 #include	"../inc/responding.hpp"
 #include	"../inc/headers.hpp"
+#include	"../inc/launch_servers.hpp"
 #include	"../inc/Utils.hpp"
 #include	"../inc/Cgi.hpp"
 #include	"../inc/Mime.hpp"
+#include	"../inc/Response.hpp"
 
 #define	CRLF			"\r\n"
 #define	CRLFx2		"\r\n\r\n"
 
 
 void respond_connection(int &client, Server &server, URI &rq){
-	
 	check_body_size(server, rq);
-	//string s_buff = "HTTP/1.1 ";
 
-
-	//	Mirar cómo se hace una request para que sea proxy y comprobar que nuestro servidor no puede ser proxy
 
 	cout << "\tStatus is->[" << rq.getStatusCode() << "]" << std::endl;
 	string	parseErrs("400 405 406 411 413 414 415 417 501 505");
@@ -30,9 +28,31 @@ void respond_connection(int &client, Server &server, URI &rq){
 			cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		}
 	}
+
+	/*		JOSELITOOO
+	Response	response(rq);
+
+	response.handleResponse(server);
+	string res = response.getResponse();
+	cerr << RED << "PRE SEND " << client << EOC << std::endl;
+	//cerr << CYA << "responseeeeeeeee[" << displayHiddenChars(res) << "]" << EOC << std::endl;
+	int test = send(client, res.c_str(), sizeof(res.c_str()), 0);
+
+	cerr << CYA << "responseeeeeeeee[\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
+	cerr << CYA << test << EOC << std::endl;
+	if (test == -1)
+	{
+		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
+	}
+	cerr << RED << "POST SEND " << client << EOC << std::endl;
+	*/
+
 	cout << RED << "Responding client " << client << " !!" << EOC << std::endl;
 	rq.setCloseConnection(true);
 }
+
+
+
 
 void	add_error_status_code_msg(string &response, URI &rq){
 	string	code = rq.getStatusCode();

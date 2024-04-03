@@ -2,24 +2,25 @@
 #include "../inc/headers.hpp"
 
 
-//Response(std::string const &buffer){
-Response::Response()
+Response::Response(URI &rq)
 {
     mime = Mime();
     isListing = false;
-    request = new URI(); // == rq;
+    request = &rq;
+    //request = new URI();
     code = request->getStatusCode();
-    handleResponse(); //(client, server, rq);
 }
 
-Response::~Response(){
+Response::~Response()
+{
+    //delete request;
 }
 
 void Response::checkRedirection(Route const & route)
 {
     if (!route.getRedirect().empty())
     {
-        headers["Location"] = route.getRedirect();
+        headers[LOCATION_H] = route.getRedirect();
         throw ServerException(STATUS_301);
     }
 }
@@ -36,8 +37,10 @@ std::pair<std::string, bool>    getMatchedPath(std::string serverRootPath, std::
     std::pair<std::string, bool> value;
     value.second = false;
     trimTrailingSlashes(serverRootPath);       
-    if (path.find(serverRootPath) == 0) {
-        if (path.length() == serverRootPath.length() || path[serverRootPath.length()] == '/') {
+    if (path.find(serverRootPath) == 0)
+    {
+        if (path.length() == serverRootPath.length() || path[serverRootPath.length()] == '/')
+        {
             value.first = path.substr(serverRootPath.length());
             value.second = true;
         } 
@@ -72,13 +75,13 @@ Route Response::findBestMatchInRoute(Route & route, std::string const & resource
                 throw ServerException(STATUS_409);
             else
             {
-                headers["Location"] = route.getPath() + resource + "/";
+                headers[LOCATION_H] = route.getPath() + resource + "/";
                 throw ServerException(STATUS_301);
             }
         }
         Route newRoute(route.getRoot() + resource, route.getPath() + resource, Route::DIRECTORY);
         newRoute.setAllowListing(route.getAllowListing());
-        return newRoute;
+        return (newRoute);
     }
     else if (CheckIfInFile(route.getRoot() + resource))
     {
@@ -95,12 +98,12 @@ Route Response::findBestMatchInServer(Server & server, std::string const & resou
     if (CheckInDirectory(server.getRoot() + resource))
     {
         if (resource.back() != '/')
-        { // Check if resource ends with a slash (if not, redirect to resource/
+        {
             if (request->getMethod2() == "DELETE")
                 throw ServerException(STATUS_409);
             else
             {
-                headers["Location"] = resource + "/";
+                headers[LOCATION_H] = resource + "/";
                 throw ServerException(STATUS_301);
             }
         }
@@ -108,10 +111,10 @@ Route Response::findBestMatchInServer(Server & server, std::string const & resou
         newRoute.setAllowListing(server.getAllowListing());
         return (newRoute);
     }
-    else if (CheckIfInFile(server.getRoot() + resource)) // Check if resource is a file
+    else if (CheckIfInFile(server.getRoot() + resource))
         return (Route(server.getRoot(), resource, Route::FILE));
     throw ServerException(STATUS_404);
-}
+    }
 
 Route Response::deepSearch(Server & server, std::string const & resource)
 {
@@ -152,10 +155,10 @@ Route Response::getRoute(Server & server)
     {
         if (request->getMethod2() == "DELETE")
             throw ServerException(STATUS_409);
-        headers["Location"] = request->getUri() + "/";
+        headers[LOCATION_H] = request->getUri() + "/";
         throw ServerException(STATUS_301);
     }
-    checkRedirection(*it);//checkkeame las redirecciones y los metodos 
+    checkRedirection(*it);
     checkMethods(*it);
     if (request->getMethod2() != "GET" && server.getClientMaxBodySize() != 0 && \
             request->getBody().size() > server.getClientMaxBodySize())
@@ -169,7 +172,7 @@ Server Response::getServer()
     if (it != Config::end())
         if (request->getMethod2() != "GET" && it->getClientMaxBodySize() != 0 && \
             request->getBody().size() > it->getClientMaxBodySize())
-                throw ServerException(STATUS_413);
+                throw ServerException(STATUS_413); 
         return *it;
     Server s = *(Config::begin());
     if (request->getMethod2() != "GET" && s.getClientMaxBodySize() != 0 && \
@@ -184,7 +187,7 @@ void Response::readContent(std::string const &filePath, string code)
 
     if (file.is_open())
     {
-        headers["CONTENT-TYPE"] = mime[Cgi::getFileExt(filePath)];
+        headers[CONTENT_TYPE_H] = mime[Cgi::getFileExt(filePath)];
         std::stringstream buffer;
         std::string line;
         while (std::getline(file, line))
@@ -199,11 +202,11 @@ void Response::readContent(std::string const &filePath, string code)
     }
 }
 
-void Response::handleGet(Server const & server, Route const & route)
+void Response::handleGet(Server &server, Route const & route)
 {
     std::string filePath = getFilePath(server, route);
     if (isListing)
-        return;																					//TO DO: send( Autoindex HTML);
+        return;
     removeConsecutiveChars(filePath, '/');
     if (!route.getCgi().empty())
     {
@@ -215,10 +218,7 @@ void Response::handleGet(Server const & server, Route const & route)
         body = cgi.getResponseBody();
         return; 
     }
-    readContent(filePath, STATUS_200);				//TO DO: send( HTTP\1.1 + stattusCode + message \r\n
-																							//						Content-Lenght: readConten.size() \r\n
-																							//						\r\n\r\n
-																							//						readContent
+    readContent(filePath, STATUS_200);
 }
 
 std::string Response::tryFiles(Server const & server, Route const & route, std::string & root)
@@ -246,7 +246,7 @@ std::string Response::tryFiles(Server const & server, Route const & route, std::
         file.close();
     }
     if (route.getRouteType() != Route::FILE)
-        throw ServerException(STATUS_404); 										// TO DO: Mirar qué error mandar
+        throw ServerException(STATUS_404);// TO DO: Mirar qué error mandar
     throw ServerException(STATUS_404);
 }
 
@@ -254,7 +254,6 @@ std::string Response::getFilePath(Server const & server, Route const & route)
 {
     if (route.getRouteType() == Route::FILE)
         return route.getRoot() + "/" + route.getPath();
-    
     try
     {
         std::string root, index;
@@ -275,7 +274,7 @@ std::string Response::getFilePath(Server const & server, Route const & route)
     }
 }
 
-void Response::handleDelete(Server const & server, Route const & route)
+void Response::handleDelete(Server &server, Route const & route)
 {
     std::string filePath = getFilePath(server, route);
     removeConsecutiveChars(filePath, '/');
@@ -356,7 +355,7 @@ void Response::readBody(Route const & route)
         processMultipartFormDataBody(body, route);
 }
 
-void Response::handlePost(Server const & server, Route const & route)
+void Response::handlePost(Server &server, Route const & route)
 {
     if (!route.getCgi().empty())
     {
@@ -369,16 +368,48 @@ void Response::handlePost(Server const & server, Route const & route)
         return; 
     }
     readBody(route);
-    throw ServerException(STATUS_201);	// send( );
+    throw ServerException(STATUS_201);
 }
 
-void Response::handleResponse(void) 		//TO DO: Que le llegue el client, server y rq del respond_connection() en responding.cpp
+std::string getDateGMT()
 {
-    Server  server;//
+    std::time_t t = std::time(0);
+    std::tm tm = *std::gmtime(&t);
+    std::stringstream ss;
+    ss << std::put_time(&tm, "%a, %d %b %Y %H:%M:%S GMT");
+    return (ss.str());
+}
 
+std::string Response::getResponse()
+{
+    std::stringstream ss;
+/*
+    ss << "HTTP/1.1 " << "200 OK" << "\r\n";
+    ss << "Content-Type: " << "text/plain\r\n";
+    //ss << "Server: webserv/1.0\r\n";
+    //ss << "Date: " << getDateGMT() << "\r\n";
+    ss << "Content-Length: " << toString(body.size()) << "\r\n";
+    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
+        ss << it->first << ": " << it->second << "\r\n";
+    ss << "\r\n";
+    ss << body;
+*/
+
+
+    ss << "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nContent-length: 13\r\n\n<h1>Hola</h1>";
+    return (ss.str());
+}
+
+void    Response::setStatus(std::string codestr)
+{
+    if (code == "")
+        code = codestr;
+}
+
+void Response::handleResponse(Server &server)
+{
     try
     {
-        server = getServer();
         if (code != STATUS_200)
             throw ServerException(code);
         Route route = getRoute(server);
@@ -394,11 +425,15 @@ void Response::handleResponse(void) 		//TO DO: Que le llegue el client, server y
     catch (ServerException & e)
     {
         code = request->getStatusCode();
- // 		Comento para que compile       readContent(server.getErrorPages()[code], code);
+        int c;
+        std::stringstream    ss(code.substr(0, 3));
+        ss >> c;
+        readContent(server.getErrorPages()[c], code);
     }
     catch (std::exception & e)
     {
         code = STATUS_500;
-//			Comento para que compile       readContent(server.getErrorPages()[code], code);
+        int c = 500;
+        readContent(server.getErrorPages()[c], code);
     }
 }

@@ -47,7 +47,7 @@ void	listening_connections(vector<Server> servers)
 		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, NULL) < 0){ //tiene que ser para read y write a la vez
 			close_sockets(servers);
 			throw ServerException("Error when multiplexing with select()");
-		}
+		}///////
 		for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
 			if (handle_sockets(*it, servers, fdNow, readfds, true, 0)){
 				break ;
@@ -91,7 +91,7 @@ bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_s
 			cout << "Socket going to accept" << std::endl;
 			accept_connection(socket, server, all);
 			return (true);
-		}
+		}//
 		read_connection(socket, server, server.getClientUri().at(client));
 		if (server.getClientUri().at(client).getCloseConnection()){
 			//keep connection alive ? si hay el header
@@ -153,13 +153,11 @@ void parse_rq(int &client, Server &server, URI &rq){
 		respond_connection(client, server, rq);
 		return ;
 	}
-
 	if (rq.getExpectContinue() == true){
 		send(client, CONTINUE, strlen(CONTINUE), 0);
 		cout << CYA << "-100 sent" << EOC << std::endl;
 		rq.setExpectContinue(false);
 	}
-	
 	if (rq.getIsChunked()){
 		if (read_chunked(client, rq)){
 			cout << RED << "Error: Invalid Chunked request on server " << server.getPort() << " from client " << client << EOC << std::endl;

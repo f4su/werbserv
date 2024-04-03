@@ -26,7 +26,7 @@ class Response
 
     public:
         //Response(string const &buffer);
-        Response();
+        Response(URI &rq);
         ~Response();
 
 				//Getters & Setter
@@ -42,11 +42,11 @@ class Response
         void		checkMethods(Route const & route);
         void 		checkRedirection(Route const & route);
 
-        void 		handleGet(Server const &server, Route const &route);
-        void 		handlePost(Server const &server, Route const &route);
-        void 		handleDelete(Server const &server, Route const &route);
+        void 		handleGet(Server &server, Route const & route);
+        void 		handlePost(Server &server, Route const & route);
+        void 		handleDelete(Server &server, Route const & route);
 
-        void 		handleResponse(void);
+        void 		handleResponse(Server &server);
 
         void 		readBody(Route const & route);
         void 		processUrlEncodedBody(const string& body);
@@ -54,6 +54,8 @@ class Response
         void 		processFileUpload(std::istringstream& ss, const string& line, Route const & route);
         void 		processFormField(std::istringstream& ss, const string& line, std::map<string, string>& queryStrings);
         Route 	deepSearch(Server & server, string const & resource);
+        std::string getResponse();
+        void    setStatus(std::string codestr);
 };
 
 void 											removeConsecutiveChars(string & s, char c);
