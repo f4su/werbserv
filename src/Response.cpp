@@ -197,7 +197,7 @@ void Response::readContent(std::string const &filePath, string code)
     }
     else
     {
-        code = code == STATUS_200 ? STATUS_404 : STATUS_400;
+        code = code == STATUS_200 ? STATUS_404 : code;
         body = "<!DOCTYPE html><html><h1 align='center'>" + code + "</h1></html>";
     }
 }
@@ -383,9 +383,9 @@ std::string getDateGMT()
 std::string Response::getResponse()
 {
     std::stringstream ss;
-/*
+
     ss << "HTTP/1.1 " << "200 OK" << "\r\n";
-    ss << "Content-Type: " << "text/plain\r\n";
+    ss << "Content-type: " << "text/html\r\n";
     //ss << "Server: webserv/1.0\r\n";
     //ss << "Date: " << getDateGMT() << "\r\n";
     ss << "Content-Length: " << toString(body.size()) << "\r\n";
@@ -393,10 +393,8 @@ std::string Response::getResponse()
         ss << it->first << ": " << it->second << "\r\n";
     ss << "\r\n";
     ss << body;
-*/
 
-
-    ss << "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nContent-length: 13\r\n\n<h1>Hola</h1>";
+    //ss << "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nContent-length: 13\r\n\n<h1>Hola</h1>";
     return (ss.str());
 }
 
