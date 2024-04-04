@@ -2,6 +2,7 @@
 #include	<vector>
 #include	<string>
 #include	<sstream>
+#include 	<numeric>
 #include	"../inc/request_parser.hpp"
 
 
@@ -106,5 +107,18 @@ std::string URI::getContentType() const
 std::string URI::getBoundary() const
 {
     return boundary;
+}
+
+void URI::parseBoundary()
+{
+   mapStrVect::iterator it = headers.find("Content-Type");
+    if (it != headers.end() && this->contentType == "multipart/form-data")
+    {
+		std::string value;
+		value = accumulate(begin(it->second), end(it->second), value);
+        std::stringstream ss(value);
+        std::getline(ss, this->boundary, '=');
+        std::getline(ss, this->boundary);
+    }
 }
 ////////////////////////////////////////////////////

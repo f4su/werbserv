@@ -4,6 +4,8 @@ URI::URI() : request(""), body(""), statusCode(""),
 	goingToResponse(false), closeConnection(false),
 	method('u'), scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
 	headers_parsed(false), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
+
+    parseBoundary();
 }
 
 
@@ -146,6 +148,7 @@ void	URI::setPort(size_t port){
 }
 
 void	URI::setPath(std::string path){
+	std::cerr << MAG << "////////////////////////////PATH-----> [" << path << "]" << EOC << std::endl;
 	this->path = path;
 }
 

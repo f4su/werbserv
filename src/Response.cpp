@@ -22,6 +22,7 @@ void Response::checkRedirection(Route const & route)
     if (!route.getRedirect().empty())
     {
         headers["Location"] = route.getRedirect();
+        setStatus(STATUS_301);
         throw ServerException(STATUS_301);
     }
 }
@@ -66,10 +67,14 @@ Route Response::findBestMatchInRoute(Route & route, string const & resource)
     {
         if (resource.back() != '/') {
             if (request->getMethod() == 'd')
+            {
+                setStatus(STATUS_409);
                 throw ServerException(STATUS_409);
+            }
             else
             {
                 headers["Location"] = route.getPath() + resource + "/";
+                setStatus(STATUS_301);
                 throw ServerException(STATUS_301);
             }
         }
@@ -85,6 +90,7 @@ Route Response::findBestMatchInRoute(Route & route, string const & resource)
         return (newRoute);
     }
 		std::cout << RED << "PACOOOO" << EOC << std::endl;
+    setStatus(STATUS_404);
     throw ServerException(STATUS_404);
 }
 
@@ -96,10 +102,14 @@ Route Response::findBestMatchInServer(Server & server, string const & resource)
         if (resource.back() != '/')
         {
             if (request->getMethod() == 'd')
+            {
+                setStatus(STATUS_409);
                 throw ServerException(STATUS_409);
+            }
             else
             {
                 headers["Location"] = resource + "/";
+                setStatus(STATUS_301);
                 throw ServerException(STATUS_301);
             }
         }
@@ -110,6 +120,7 @@ Route Response::findBestMatchInServer(Server & server, string const & resource)
     }
     else if (CheckIfInFile(server.getRoot() + resource))
         return (Route(server.getRoot(), resource, Route::FILE));
+    setStatus(STATUS_404);
     throw ServerException(STATUS_404);
 }
 
@@ -143,8 +154,12 @@ Route Response::getRoute(Server & server)
     if (resource.back() != '/')
     {
         if (request->getMethod() == 'd')
+        {
+            setStatus(STATUS_409);
             throw ServerException(STATUS_409);
+        }
         headers["Location"] = request->getUri() + "/";
+        setStatus(STATUS_301);
         throw ServerException(STATUS_301);
     }
     checkRedirection(*it);
@@ -157,12 +172,18 @@ Server Response::getServer()
     if (it != Config::end())
         if (request->getMethod() != 'g' && it->getClientMaxBodySize() != 0 && \
             request->getBody().size() > it->getClientMaxBodySize())
-                throw ServerException(STATUS_413); 
+            {
+                setStatus(STATUS_413);
+                throw ServerException(STATUS_413);
+            }
         return *it;
     Server s = *(Config::begin());
     if (request->getMethod() != 'g' && s.getClientMaxBodySize() != 0 && \
             request->getBody().size() > s.getClientMaxBodySize())
+            {
+                setStatus(STATUS_413);
                 throw ServerException(STATUS_413);
+            }
     return (s);
 }
 
@@ -234,7 +255,11 @@ string Response::tryFiles(Server const & server, Route const & route, string & r
     }
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, string & root)" << EOC << std::endl;
     if (route.getRouteType() != Route::FILE)
-        throw ServerException(STATUS_404);// TO DO: Mirar qué error mandar
+    {
+        setStatus(STATUS_403);
+        throw ServerException(STATUS_403);
+    }
+    setStatus(STATUS_404);
     throw ServerException(STATUS_404);
 }
 
@@ -253,7 +278,7 @@ string Response::getFilePath(Server const & server, Route const & route)
         return root + "/" + index;
     } catch (ServerException & e)
     {				//Revisar este status también
-        if (request->getStatusCode() == STATUS_404 && (route.getAllowListing() || server.getAllowListing())  \
+        if (request->getStatusCode() == STATUS_403 && (route.getAllowListing() || server.getAllowListing())  \
             && request->getMethod() != 'p')
         {
             if (request->getMethod() == 'd')
@@ -361,6 +386,7 @@ void Response::handlePost(Server &server, Route const & route)
         return; 
     }
     readBody(route);
+    setStatus(STATUS_201);
     throw ServerException(STATUS_201);
 }
 
@@ -416,13 +442,16 @@ void Response::handleResponse(Server &server)
         }
         else {
             std::cout << RED << "IN EXCEPT"<< EOC << std::endl;
+            setStatus(STATUS_501);
             throw ServerException(STATUS_501);			//TO DO: Todo lo que sean throws, convertirlos en send
-				}
+		}
     }
     catch (ServerException & e)
     {
         std::cout << CYA << "MSGGGGGGGGGGGG>" << e.what() << EOC << std::endl;
-        code = request->getStatusCode();
+        std::cout << CYA << "///////////////////////CODE IS 1 : " << code << EOC << std::endl;
+        //code = request->getStatusCode();
+        std::cout << CYA << "///////////////////////CODE IS 1 : " << code << EOC << std::endl;
         int c;
         std::stringstream    ss(code.substr(0, 3));
         ss >> c;
@@ -433,7 +462,9 @@ void Response::handleResponse(Server &server)
     }
     catch (std::exception & e)
     {
+        std::cout << CYA << "///////////////////////CODE IS 2 : " << code << EOC << std::endl;
         code = STATUS_500;
+        std::cout << CYA << "///////////////////////CODE IS 2 : " << code << EOC << std::endl;
         int c = 500;
         std::cout << CYA << "///////////////////////FILEPATH IS 2 : " << server.getErrorPages()[c] << EOC << std::endl;
         readContent(server.getErrorPages()[c], code);

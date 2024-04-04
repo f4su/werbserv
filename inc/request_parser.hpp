@@ -57,9 +57,8 @@ class	URI
 
 ////// Esto es de joselito
 		string rawBody;
-    string uri;
-    string version;
-
+		string uri;
+		string version;
 		string	contentType;
 		string	boundary;
 
@@ -121,6 +120,7 @@ class	URI
 
 		string	getContentType() const;
 		string	getBoundary() const;
+    	void    parseBoundary();
 
 ////////////////////////////////////////////////
 

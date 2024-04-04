@@ -8,7 +8,7 @@
 
 #define	CRLF					"\r\n"
 #define	CRLFx2				"\r\n\r\n"
-#define	DEFAULT_INDEX	"/html/index.html"
+#define	DEFAULT_INDEX	"index.html"
 
 
 bool	responding_when_error(int &client, Server &server, URI &rq){
@@ -41,8 +41,10 @@ void respond_connection(int &client, Server &server, URI &rq){
 
 
 	rq.setStatusCode(STATUS_200);
+	string index("/");
+	index += (rq.getPath() == "/" && server.getIndex().size()) ? server.getIndex()[0] : DEFAULT_INDEX;
 	if (rq.getPath() == "/"){
-		rq.setPath(DEFAULT_INDEX);
+		rq.setPath(index);
 	}
 	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	Response	response(rq);

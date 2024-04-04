@@ -30,7 +30,7 @@
 #define STATUS_400 "400 Bad Request"
 //	#define STATUS_401 "401 Unauthorized"											NOT IMPLEMENTED
 //	#define STATUS_402 "402 Payment Required"									NOT IMPLEMENTED									
-//	#define STATUS_403 "403 Forbidden"												NOT IMPLEMENTED
+#define STATUS_403 "403 Forbidden"
 #define STATUS_404 "404 Not Found"
 #define STATUS_405 "405 Method Not Allowed"
 #define STATUS_406 "406 Not Acceptable"
