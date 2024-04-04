@@ -65,7 +65,7 @@ Route Response::findBestMatchInRoute(Route & route, string const & resource)
     if (CheckInDirectory(route.getRoot() + resource))
     {
         if (resource.back() != '/') {
-            if (request->getMethod2() == "DELETE")
+            if (request->getMethod() == 'd')
                 throw ServerException(STATUS_409);
             else
             {
@@ -84,6 +84,7 @@ Route Response::findBestMatchInRoute(Route & route, string const & resource)
         newRoute.setRouteType(Route::FILE);
         return (newRoute);
     }
+		std::cout << RED << "PACOOOO" << EOC << std::endl;
     throw ServerException(STATUS_404);
 }
 
@@ -94,7 +95,7 @@ Route Response::findBestMatchInServer(Server & server, string const & resource)
     {
         if (resource.back() != '/')
         {
-            if (request->getMethod2() == "DELETE")
+            if (request->getMethod() == 'd')
                 throw ServerException(STATUS_409);
             else
             {
@@ -109,7 +110,6 @@ Route Response::findBestMatchInServer(Server & server, string const & resource)
     }
     else if (CheckIfInFile(server.getRoot() + resource))
         return (Route(server.getRoot(), resource, Route::FILE));
-		request->setStatusCode(STATUS_404);
     throw ServerException(STATUS_404);
 }
 
@@ -155,12 +155,12 @@ Server Response::getServer()
 {
     vector<Server>::iterator it = Config::find(request->getHost(), request->getPort());
     if (it != Config::end())
-        if (request->getMethod2() != "GET" && it->getClientMaxBodySize() != 0 && \
+        if (request->getMethod() != 'g' && it->getClientMaxBodySize() != 0 && \
             request->getBody().size() > it->getClientMaxBodySize())
                 throw ServerException(STATUS_413); 
         return *it;
     Server s = *(Config::begin());
-    if (request->getMethod2() != "GET" && s.getClientMaxBodySize() != 0 && \
+    if (request->getMethod() != 'g' && s.getClientMaxBodySize() != 0 && \
             request->getBody().size() > s.getClientMaxBodySize())
                 throw ServerException(STATUS_413);
     return (s);
@@ -254,9 +254,9 @@ string Response::getFilePath(Server const & server, Route const & route)
     } catch (ServerException & e)
     {				//Revisar este status también
         if (request->getStatusCode() == STATUS_404 && (route.getAllowListing() || server.getAllowListing())  \
-            && request->getMethod2() != "POST")
+            && request->getMethod() != 'p')
         {
-            if (request->getMethod2() == "DELETE")
+            if (request->getMethod() == 'd')
                 return route.getRoot() + "/";
             vector<string> files = getFilesInDirectory(route.getRoot(), route.getPath());
             return (isListing = true, body = generateHtmlListing(files), "");
@@ -402,18 +402,15 @@ void Response::handleResponse(Server &server)
         std::cout << RED << "START TO HANDLE PACOO"<< EOC << std::endl;
 				headers["Content-Type"] = "text/html";
         Route route = getRoute(server);
-        if (request->getMethod() == 'g')
-        {
+        if (request->getMethod() == 'g'){
             std::cout << RED << "IN GET "<< EOC << std::endl;
             handleGet(server, route);
         }
-        else if (request->getMethod() == 'p')
-        {
+        else if (request->getMethod() == 'p'){
             std::cout << RED << "IN POST "<< EOC << std::endl;
             handlePost(server, route);
         }
-        else if (request->getMethod() == 'd')
-        { 
+        else if (request->getMethod() == 'd'){ 
             std::cout << RED << "IN POST "<< EOC << std::endl;
             handleDelete(server, route);
         }
@@ -424,6 +421,7 @@ void Response::handleResponse(Server &server)
     }
     catch (ServerException & e)
     {
+        std::cout << CYA << "MSGGGGGGGGGGGG>" << e.what() << EOC << std::endl;
         code = request->getStatusCode();
         int c;
         std::stringstream    ss(code.substr(0, 3));

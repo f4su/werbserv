@@ -16,7 +16,7 @@ using std::cerr;
 //	../src/launch_servers.cpp
 void		listening_connections(std::vector<Server> servers);
 void		accept_connection(int &socket, Server &server, fd_set &fds);
-bool		handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_set &all, bool sock_is_server, int client);
+bool		handle_sockets(Server &server, vector<Server> &servers, fd_set &readfds, fd_set &writefds, bool sock_is_server, int client);
 void		read_connection(int &client, Server &server, URI &rq);
 void		parse_rq(int &client, Server &server, URI &rq_info);
 

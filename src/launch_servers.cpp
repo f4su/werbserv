@@ -16,25 +16,40 @@ typedef vector<int>::iterator vecIntIt;
 typedef sockaddr sa;
 typedef sockaddr_in sa_in;
 
+void	setSockets(fd_set	&readfds, fd_set &writefds, vector<Server> servers){
+	FD_ZERO(&readfds);
+	FD_ZERO(&writefds);
+
+	for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
+
+		cout << MAG << "Socket---->" << it->getSocket() << EOC << std::endl;
+		FD_SET(it->getSocket(), &readfds);
+		if (it->getSocket() > it->getMax()){
+			it->setMax(it->getSocket());
+		}
+		
+		if (!it->getClients().empty()){
+			vector<int> clients = it->getClients();
+			for (vector<int>::iterator jt = clients.begin(); jt != clients.end(); ++jt ){
+				cout << MAG << "\tClient---->" << *jt << EOC << std::endl;
+				FD_SET(*jt, &readfds);
+			}
+		}
+		
+	}
+}
+
 void	listening_connections(vector<Server> servers)
 {
-	fd_set					readfds, writefds, fdNow;
+	fd_set					readfds, writefds;
 	vector<int>			clients;
   struct timeval	timeout;
 
 	timeout.tv_sec = 20;
   timeout.tv_usec = 0;
-	FD_ZERO(&readfds);
-	FD_ZERO(&writefds);
-	for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
-		FD_SET(it->getSocket(), &readfds);
-		if (it->getSocket() > it->getMax()){
-			it->setMax(it->getSocket());
-		}
-	}
 
 	while (true){
-		fdNow = readfds;
+		setSockets(readfds, writefds, servers);
 		cout << MAG << "v...Waiting for connections...v" << EOC << std::endl;
 		cout << MAG << "MAX->" << servers[0].getMax() << EOC << std::endl;
 
@@ -49,19 +64,19 @@ void	listening_connections(vector<Server> servers)
 		}*/
 
 
-		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, timeout) < 0){ //tiene que ser para read y write a la vez
+		if (select(servers[0].getMax() + 1, &readfds, &writefds, NULL, &timeout) < 0){ //tiene que ser para read y write a la vez
 			close_sockets(servers);
 			perror("Socket errorrr");
 			throw ServerException("Error when multiplexing with select()");
 		}
 		for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
-			if (handle_sockets(*it, servers, fdNow, readfds, true, 0)){
+			if (handle_sockets(*it, servers, readfds, writefds, true, 0)){
 				break ;
 			}
 			if (!it->getClients().empty()){
 				clients = it->getClients();
 				for (vecIntIt client = clients.begin(); client != clients.end(); ++client){
-					handle_sockets(*it, servers, fdNow, readfds, false, *client);
+					handle_sockets(*it, servers, readfds, writefds, false, *client);
 				}
 			}
 		}
@@ -89,21 +104,29 @@ void accept_connection(int &socket, Server &server, fd_set &fds){
 	server.setClientUri(clientRequest);
 }
 
-bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_set &all, bool sock_is_server, int client){
+bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &readfds, fd_set &writefds, bool sock_is_server, int client){
 	int	socket = sock_is_server ? server.getSocket() : client;
 
-	if (FD_ISSET(socket, &ready)){
+	if (FD_ISSET(socket, &readfds)){
 		if (sock_is_server){
 			cout << "Socket going to accept" << std::endl;
-			accept_connection(socket, server, all);
+			accept_connection(socket, server, readfds);
 			return (true);
 		}
 		read_connection(socket, server, server.getClientUri().at(client));
-		
+
 		if (server.getClientUri().at(client).getCloseConnection()){
-			//keep connection alive ? si hay el header
-			close_client_connection(client, server, servers, ready);
+			close_client_connection(client, server, servers, readfds);
 		}
+		else if (server.getClientUri().at(client).getGoingToResponse()){
+			FD_CLR(client, &readfds);
+			FD_SET(client, &writefds);
+		}
+	}
+	if (FD_ISSET(socket, &writefds)){
+		respond_connection(client, server,  server.getClientUri().at(client));
+		close_client_connection(client, server, servers, writefds);
+		//FD_CLR(client, &all); // ??
 	}
 	return (false);
 }
@@ -123,7 +146,7 @@ void read_connection(int &client, Server &server, URI &rq){
 			else {	
 				cerr << RED << "Error: Couldn't read from client (" << client << " fd)" << EOC << std::endl;
 			}
-			rq.setCloseConnection(true);
+			rq.setGoingToResponse (true);
 			return ;
 		}
 		string	tmp(request, readed);
@@ -147,17 +170,13 @@ void read_connection(int &client, Server &server, URI &rq){
 		}
 		parse_rq(client, server, server.getClientUri().at(client)); 
 	}
-	/*
-	else if (https != string::npos){
-		server.getClientUri().at(client).setStatusCode(STATUS_505); 
-		respond_connection(client, server, server.getClientUri().at(client)); 
-	}*/
 }
 
 void parse_rq(int &client, Server &server, URI &rq){
 	if (rq.getHeadersParsed() == false && invalid_request(rq, server)){
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
-		respond_connection(client, server, rq);
+		//respond_connection(client, server, rq);
+		rq.setGoingToResponse(true);
 		return ;
 	}
 	if (rq.getExpectContinue() == true){
@@ -168,11 +187,13 @@ void parse_rq(int &client, Server &server, URI &rq){
 	if (rq.getIsChunked()){
 		if (read_chunked(client, rq)){
 			cout << RED << "Error: Invalid Chunked request on server " << server.getPort() << " from client " << client << EOC << std::endl;
-			respond_connection(client, server, rq);
+			//respond_connection(client, server, rq);
+			rq.setGoingToResponse(true);
 			return ;
 		}
 	}
 	if (rq.getIsChunked() == false){
-		respond_connection(client, server, rq);
+		//respond_connection(client, server, rq);
+		rq.setGoingToResponse(true);
 	}
 }

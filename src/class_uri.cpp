@@ -1,7 +1,7 @@
 #include	"../inc/request_parser.hpp"
 
 URI::URI() : request(""), body(""), statusCode(""),
-	closeConnection(false),
+	goingToResponse(false), closeConnection(false),
 	method('u'), scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
 	headers_parsed(false), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
 }
@@ -9,7 +9,7 @@ URI::URI() : request(""), body(""), statusCode(""),
 
 URI::URI(URI const &copy) :
 	request(copy.request), body(copy.body),
-	closeConnection(copy.closeConnection),
+	goingToResponse(copy.goingToResponse), closeConnection(copy.closeConnection),
 	method(copy.method), scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path), query(copy.query), fragment(copy.fragment), params(copy.params),
 	headers_parsed(copy.headers_parsed), headers_size(copy.headers_size), isChunked(copy.isChunked), chunkSize(copy.chunkSize), expect_continue(copy.expect_continue){
 
@@ -30,6 +30,10 @@ string	URI::getRequest()const{
 
 string	URI::getBody()const{
 	return (body);
+}
+
+bool	URI::getGoingToResponse()const{
+	return (goingToResponse);
 }
 
 bool	URI::getCloseConnection()const{
@@ -109,6 +113,10 @@ void	URI::setBody(string &bd){
 	this->body = bd;
 }
 
+void	URI::setGoingToResponse(bool go){
+	goingToResponse = go;	
+}
+
 void	URI::setCloseConnection(bool close){
 	this->closeConnection = close;
 }
@@ -181,6 +189,7 @@ void	URI::setStatusCode(string status){
 URI	&	URI::operator=(const URI &rhs){
 	this->request = rhs.getRequest();
 	this->method = rhs.getMethod();
+	this->goingToResponse = rhs.getGoingToResponse();
 	this->closeConnection = rhs.getCloseConnection();
 	this->headers_parsed = rhs.getHeadersParsed();
 	this->scheme = rhs.getScheme();

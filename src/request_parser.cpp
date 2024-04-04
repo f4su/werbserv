@@ -85,10 +85,6 @@ void	tokenizer(string raw_request, vector<vector<string> >	&tokens){
 
 ///////////////////////////Esto es de Joselitoo
 
-std::string URI::getMethod2() const {
-    return method2;
-}
-
 std::string URI::getUri() const {
     return uri;
 }

@@ -43,7 +43,9 @@ std::map<std::string, std::string> Cgi::getEnv(URI const & req, std::string cons
 	env["REDIRECT_STATUS"] = "1";
 	env["SERVER_PROTOCOL"] = req.getVersion();
 	env["SERVER_PORT"] = toString(req.getPort());
-	env["REQUEST_METHOD"] = req.getMethod2();
+	env["REQUEST_METHOD"] = req.getMethod() == 'g' ? "GET" :
+														req.getMethod() == 'd' ? "DELETE" :
+														req.getMethod() == 'p' ? "POST" : "";
 	env["PATH_INFO"] = filename;
 	env["PATH_TRANSLATED"] = filename;
 	env["QUERY_STRING"] = getQuery(req.getUri()); //req.getQuery();

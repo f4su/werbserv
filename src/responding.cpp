@@ -45,7 +45,6 @@ void respond_connection(int &client, Server &server, URI &rq){
 		rq.setPath(DEFAULT_INDEX);
 	}
 	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
-	//		JOSELITOOO
 	Response	response(rq);
 
 	response.handleResponse(server);

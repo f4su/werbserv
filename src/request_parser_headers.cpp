@@ -140,7 +140,9 @@ bool	check_headers_values(URI &rq, Server &server){
 					rq.setHost(values[0]);
 				}
 			}
-			if (values.size() != 1 || find(hosts.begin(), hosts.end(), rq.getHost()) == hosts.end()){
+			cout << "HOOOOSTIEEEE->" << rq.getHost() << "]" << std::endl;
+			if (values.size() != 1 || ( rq.getHost() != "127.0.0.1" &&
+						find(hosts.begin(), hosts.end(), rq.getHost()) == hosts.end())){
 				cout << RED << "Error: Host header doesn't match Server Names (400)" << EOC << std::endl; 
 				rq.setStatusCode(STATUS_400);
 				return (true);

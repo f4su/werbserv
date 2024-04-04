@@ -30,6 +30,7 @@ class	URI
 		string			request;
 		string			body;
    	string			statusCode;
+		bool				goingToResponse;
 
 		//	Utils
 		bool				closeConnection;
@@ -59,7 +60,6 @@ class	URI
     string uri;
     string version;
 
-		string	method2;
 		string	contentType;
 		string	boundary;
 
@@ -75,6 +75,7 @@ class	URI
 		//Getters & Setters
 		string			getRequest()const;
 		string			getBody()const;
+		bool				getGoingToResponse()const;
 		bool				getCloseConnection()const;
 		bool				getHeadersParsed()const;
 		char				getMethod()const;
@@ -96,6 +97,7 @@ class	URI
 		void				setBody(string &bd);
 		void				setCloseConnection(bool close);
 		void				setHeadersParsed(bool parsed);
+		void				setGoingToResponse(bool go);
 		void				setMethod(char mth);
 		void				setScheme(string sche);
 		void				setAuthority(string auth);
@@ -117,7 +119,6 @@ class	URI
     string	getUri() const;
     string	getVersion() const;
 
-		string	getMethod2() const;
 		string	getContentType() const;
 		string	getBoundary() const;
 
