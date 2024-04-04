@@ -174,6 +174,7 @@ void read_connection(int &client, Server &server, URI &rq){
 
 void parse_rq(int &client, Server &server, URI &rq){
 	if (rq.getHeadersParsed() == false && invalid_request(rq, server)){
+		cout << RED << "/JOSEEEEEEE//////////STATUS CODE----> " << rq.getStatusCode()<< EOC << std::endl;
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 		//respond_connection(client, server, rq);
 		rq.setGoingToResponse(true);

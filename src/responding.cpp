@@ -32,6 +32,22 @@ bool	responding_when_error(int &client, Server &server, URI &rq){
 	return (false);
 }
 
+void resolveRedirIndex(Server &server, URI &rq)
+{
+	vector<Route>		routes = server.getRoutes();
+
+	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
+		if (it->getPath() == rq.getPath() && it->getRedirect().size()){
+			rq.setPath(it->getRedirect());
+			return ;
+		}
+	}
+	string index("/");
+	index += (rq.getPath() == "/" && server.getIndex().size()) ? server.getIndex()[0] : DEFAULT_INDEX;
+		if (rq.getPath() == "/")
+			rq.setPath(index);
+}
+
 void respond_connection(int &client, Server &server, URI &rq){
 	check_body_size(server, rq);
 
@@ -39,13 +55,9 @@ void respond_connection(int &client, Server &server, URI &rq){
 		return ;
 	}
 
-
 	rq.setStatusCode(STATUS_200);
-	string index("/");
-	index += (rq.getPath() == "/" && server.getIndex().size()) ? server.getIndex()[0] : DEFAULT_INDEX;
-	if (rq.getPath() == "/"){
-		rq.setPath(index);
-	}
+	resolveRedirIndex(server, rq);
+	
 	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	Response	response(rq);
 

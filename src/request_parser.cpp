@@ -35,6 +35,7 @@ bool	invalid_request(URI &rq, Server &server){
 		return (true);
 	}
 	if (invalid_start_line(tokens[0], rq, server)){
+		cout << RED << "Request error: Invalid Start Line" << EOC << std::endl;
 		return (true);
 	}
 	if (invalid_header(tokens, rq, server)){

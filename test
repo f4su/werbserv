@@ -31,7 +31,7 @@
     <route path="/post">
         root = www/cgi-scripts
         methods = POST
-        index = post.php
+        index = /Post.php
         cgi = .php:cgi-bin/php-cgi
     </route>
     <route path="/delete">

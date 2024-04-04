@@ -22,6 +22,7 @@ bool invalid_start_line(vector<string> const &line, URI &rq, Server &server){
 
 	//Checking method token
 	if (invalid_method(line[0], rq)){
+		cout << RED << std::endl << "\tRequest error: Invalid method" << EOC << std::endl;
 		return (true);
 	}
 
@@ -32,7 +33,8 @@ bool invalid_start_line(vector<string> const &line, URI &rq, Server &server){
 		return (true);
 	}
 	if (invalid_uri(line[1], rq, server)){
-		rq.setStatusCode(STATUS_400);
+		cout << RED << std::endl << "\tRequest error: Invalid URI" << EOC << std::endl;
+
 		return (true);
 	}
 	return (false);
@@ -63,6 +65,7 @@ bool	invalid_method(string const &method, URI &rq){
 bool	invalid_uri(const string &token, URI &rq, Server &server){
 	if (invalid_chars(token)){
 		cout << RED << std::endl << "\tRequest error: Invalid URI (not properly encoded)" << EOC << std::endl;
+		rq.setStatusCode(STATUS_400);
 		return (true);
 	}
 
@@ -70,6 +73,7 @@ bool	invalid_uri(const string &token, URI &rq, Server &server){
 	//We need to determine the URI form: origin (o), absolute (a), authority (y) or asterisk
 	char	form = 'u'; //u = undefined
 	if (determine_uri_form(token, &form)){
+		rq.setStatusCode(STATUS_400);
 		return (true);
 	}
 
@@ -83,6 +87,7 @@ bool	invalid_uri(const string &token, URI &rq, Server &server){
 		//Scheme must be http (we aren't going to implement HTTP) and end with : before a backslash
 		if (token.size() < 8 || token.compare(0, 7, "http://") != 0){
 			cout << RED << std::endl << "\tRequest error: Invalid URI scheme" << EOC << std::endl;
+			rq.setStatusCode(STATUS_400);
 			return (true);
 		}
 		rq.setScheme("http");
@@ -99,13 +104,15 @@ bool	invalid_uri(const string &token, URI &rq, Server &server){
 		//Authority must begin with // and end with /, ?, # or the end of the URI. It doesn't appear in origin form
 		if (token.size() < 1 || path_start != string::npos || params_start != string::npos || frag_start != string::npos){
 			cout << RED << std::endl << "\tRequest error: Invalid URI scheme(authority form)" << EOC << std::endl;
+			rq.setStatusCode(STATUS_400);
 			return (true);
 		}
 	}
 
 	//Origin Form doesn't have specific parsing since it's in included in Authority and Absolute forms
 	if (invalid_values(token, rq, path_start, params_start, frag_start, &form)){
-			return (true);
+		rq.setStatusCode(STATUS_400);
+		return (true);
 	}
 
 	if (invalid_method_in_route(rq, server)){
@@ -162,6 +169,8 @@ bool	invalid_method_in_route(URI &rq, Server &server){
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
 		route_mths = it->getMethods();
 		if (it->getPath() == rq.getPath()){
+			if (route_mths.size() == 0 && method.size())
+				return false;
 			if (std::find(route_mths.begin(), route_mths.end(), method) == route_mths.end()){
 				rq.setStatusCode(STATUS_501);
 				cout << RED << std::endl << "\tRequest error: Method not implemented on path (501)" << EOC << std::endl;

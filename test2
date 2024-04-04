@@ -30,7 +30,7 @@
     </route>
     <route path="/post">
         root = www/cgi-scripts
-        methods = POST
+        methods = POST, GET
         index = post.php
         cgi = .php:cgi-bin/php-cgi
     </route>
