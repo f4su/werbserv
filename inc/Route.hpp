@@ -25,6 +25,7 @@ public:
     std::vector<std::string>                    getMethods() const;
     std::string                                 getUploadDir() const;
     bool                                        getAllowListing() const;
+    bool                                        getAllowListingSet() const;
     std::map<int, std::string>                  getErrorPages() const;
     std::map<std::string, std::string>          getCgi() const;
     void                                        setPath(const std::string& path);
@@ -34,6 +35,7 @@ public:
     void                                        setMethods(const std::vector<std::string>& methods);
     void                                        setUploadDir(const std::string& uploadDir);
     void                                        setAllowListing(const bool& allowListing);
+    void                                        setAllowListingSet(const bool& allowListingSet);
     void                                        setErrorPages(const std::map<int, std::string>&);
 
     RouteType getRouteType() const{
@@ -55,6 +57,7 @@ private:
     std::string                             uploadDir;
     std::map<int, std::string>              errorPages;
     bool                                    allowListing;
+    bool                                    allowListingSet;
     std::map<std::string, std::string>      cgi;
     RouteType                               routeType;
 };

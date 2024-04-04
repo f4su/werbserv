@@ -11,6 +11,11 @@
     </route>
     <route path="/kapouet">
         root = www/error_pages
+        redirect = /error_pages
+        
+    </route>
+    <route path="/error_pages">
+        index = /../idk.html      
     </route>
     <route path="/cgi">
         root = www/cgi-scripts
@@ -30,8 +35,8 @@
     </route>
     <route path="/post">
         root = www/cgi-scripts
-        methods = POST, GET
-        index = post.php
+        methods = POST
+        index = Post.php
         cgi = .php:cgi-bin/php-cgi
     </route>
     <route path="/delete">

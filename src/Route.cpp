@@ -2,15 +2,15 @@
 #include "../inc/ServerException.hpp"
 #include "../inc/Utils.hpp"
 
-Route::Route() : path(""), root(""), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), cgi(), routeType(OTHER)
+Route::Route() : path(""), root(""), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), allowListingSet(0), cgi(), routeType(OTHER)
 {
 };
 
-Route::Route(std::string const &path) : path(path), root(""), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), cgi(), routeType(OTHER)
+Route::Route(std::string const &path) : path(path), root(""), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), allowListingSet(0), cgi(), routeType(OTHER)
 {
 };
 
-Route::Route(std::string const &root, std::string const &path, RouteType routeType) : path(path), root(root), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), cgi(), routeType(routeType)
+Route::Route(std::string const &root, std::string const &path, RouteType routeType) : path(path), root(root), index(), redirect(), methods(), uploadDir(""), errorPages(), allowListing(0), allowListingSet(0), cgi(), routeType(routeType)
 {
 };
 
@@ -45,6 +45,11 @@ std::string Route::getUploadDir() const
 bool Route::getAllowListing() const
 {
     return (allowListing);
+}
+
+bool Route::getAllowListingSet() const
+{
+    return (allowListingSet);
 }
 
 std::map<int, std::string> Route::getErrorPages() const
@@ -85,6 +90,12 @@ void Route::setAllowListing(const bool &allowListing)
 {
     this->allowListing = allowListing;
 }
+
+void Route::setAllowListingSet(const bool &allowListingSet)
+{
+    this->allowListingSet = allowListingSet;
+}
+
 void    Route::setErrorPages(const std::map<int, std::string> & errorPages) { this->errorPages = errorPages; }
 
 void Route::print() const
@@ -160,10 +171,14 @@ void Route::fill(std::string const &line, int &lineNb)
         setUploadDir(value);
     else if (option == "allow_listing" && allowListing == 0)
     {
-        if (value == "on" || value == "1" || value == "true")
+        if (value == "on" || value == "1" || value == "true"){
             setAllowListing(true);
-        else if (value == "off" || value == "0" || value == "false")
+            setAllowListingSet(true);
+        }
+        else if (value == "off" || value == "0" || value == "false"){
             setAllowListing(false);
+            setAllowListingSet(true);
+        }
         else
             throw ServerException("Invalid route line", lineNb);
     }

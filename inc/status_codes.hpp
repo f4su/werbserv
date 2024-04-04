@@ -23,7 +23,7 @@
 //	#define STATUS_302 "302 Found"														NOT IMPLEMENTED
 //	#define STATUS_303 "303 See Other"												NOT IMPLEMENTED
 //	#define STATUS_304 "304 Not Modified"											NOT IMPLEMENTED
-//	#define STATUS_307 "307 Temporary Redirect"								NOT IMPLEMENTED
+#define STATUS_307 "307 Temporary Redirect"
 //	#define STATUS_308 "308 Permanent Redirect"								NOT IMPLEMENTED
 
 //	4xx - Client Error

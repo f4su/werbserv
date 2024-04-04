@@ -1,5 +1,6 @@
 #include "../inc/Utils.hpp"
 #include "../inc/status_codes.hpp"
+#include  "../inc/Response.hpp"
 
 void trim(std::string & s)
 {
@@ -68,25 +69,16 @@ void trimTrailingSlashes(std::string & s)
         s.pop_back();
 }
 
-void removeConsecutiveChars(std::string & s, char c)
-{
-    std::string result;
-    std::string::iterator it;
-    
-    for (it = s.begin(); it != s.end(); ++it)
-        if (result.empty() || *it != c || result.back() != c)
-            result.push_back(*it);
-    s = result;
-}
 
-std::vector<std::string> getFilesInDirectory(std::string const & rootPath, std::string const & reqPath)
+
+std::vector<std::string> getFilesInDirectory(std::string const & reqPath)
 {
     std::vector<std::string> files;
-    std::string              directoryPath = rootPath + "/";
 
-    DIR* dir = opendir(directoryPath.c_str());
-    if (dir == NULL)
+    if (CheckInDirectory(reqPath) == false)
         throw ServerException(STATUS_404);
+    
+    DIR* dir = opendir(reqPath.c_str());
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL)
     {

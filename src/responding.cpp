@@ -8,7 +8,7 @@
 
 #define	CRLF					"\r\n"
 #define	CRLFx2				"\r\n\r\n"
-#define	DEFAULT_INDEX	"index.html"
+// #define	DEFAULT_INDEX	"index.html"
 
 
 bool	responding_when_error(int &client, Server &server, URI &rq){
@@ -32,36 +32,77 @@ bool	responding_when_error(int &client, Server &server, URI &rq){
 	return (false);
 }
 
-void resolveRedirIndex(Server &server, URI &rq)
+int resolveRedirIndex(Server &server, URI &rq)
 {
 	vector<Route>		routes = server.getRoutes();
+	size_t				ind = 0;
+	int					pathMatch = -1;
 
+	//Redirect??
+
+	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
+	cout << MAG << "Path antess de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
-		if (it->getPath() == rq.getPath() && it->getRedirect().size()){
-			rq.setPath(it->getRedirect());
-			return ;
+		if (it->getPath() == rq.getPath()){
+			cout << MAG << "it->Path is->[" << it->getPath() << "]" << EOC << std::endl;
+			pathMatch = ind;
+			//Redirect
+			if (it->getRedirect().size()){
+				rq.setPath(it->getRedirect());	//Setear status code a 301??
+			}
+
+			//Root
+			else if (it->getRoot().size()){
+				rq.setPath(it->getRoot() + rq.getPath());
+			}
+			else if (server.getRoot().size()){
+				rq.setPath(server.getRoot() + rq.getPath());
+			}
+/* 			cout << MAG << "ALLOW LISTING IS-->" << it->getAllowListing() << "]" << EOC << std::endl;
+			//AllowListing
+			if (it->getAllowListingSet() == false){
+				cout << MAG << "SETTING PAPA-->" << server.getAllowListing() << "]" << EOC << std::endl;
+				it->setAllowListing(server.getAllowListing());
+			} */
+
+			//Index
+			if (it->getIndex().size()){
+				rq.setPath(rq.getPath() + it->getIndex()[0]);
+			}
+			else{
+				if (server.getIndex().size()){
+					rq.setPath( rq.getPath() + server.getIndex()[0]);
+				}
+			}
+			return (pathMatch);
 		}
+		++ind;
 	}
-	string index("/");
-	index += (rq.getPath() == "/" && server.getIndex().size()) ? server.getIndex()[0] : DEFAULT_INDEX;
-		if (rq.getPath() == "/")
-			rq.setPath(index);
+
+	if (pathMatch == -1){
+		rq.setStatusCode(STATUS_404);
+	}
+	cout << MAG << "Path después de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
+	return (pathMatch);
+
 }
 
 void respond_connection(int &client, Server &server, URI &rq){
 	check_body_size(server, rq);
-
+	size_t	routeInd;
+	if (rq.getStatusCode().size() == 0){
+		routeInd = resolveRedirIndex(server, rq);
+	}
 	if (responding_when_error(client, server, rq)){
 		return ;
 	}
 
 	rq.setStatusCode(STATUS_200);
-	resolveRedirIndex(server, rq);
 	
 	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	Response	response(rq);
 
-	response.handleResponse(server);
+	response.handleResponse(server, server.getRoutes()[routeInd]);
 	std::string res = response.getResponse();
 	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 

@@ -8,9 +8,15 @@
     allow_listing = true
     <route path="/test">
         root = src
+        allow_listing = false
     </route>
     <route path="/kapouet">
         root = www/error_pages
+        redirect = /error_pages
+        
+    </route>
+    <route path="/error_pages">
+        index = /../idk.html
     </route>
     <route path="/cgi">
         root = www/cgi-scripts
@@ -31,7 +37,7 @@
     <route path="/post">
         root = www/cgi-scripts
         methods = POST
-        index = /Post.php
+        index = Post.php
         cgi = .php:cgi-bin/php-cgi
     </route>
     <route path="/delete">
@@ -42,7 +48,7 @@
 
 <server>
     host = 127.0.0.1
-    port = 3000
+    port = 3020
     server_names = localhost
     client_max_body_size = 100000
     error_pages = 404:www/error_pages/404.html

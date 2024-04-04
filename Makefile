@@ -19,6 +19,7 @@ FILE =	main										\
 		server											\
 		Utils												\
 		Response										\
+		ResponseUtils										\
 		ServerException							\
 		request_parser							\
 		request_parser_start_line		\
