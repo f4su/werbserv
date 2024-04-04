@@ -4,7 +4,7 @@
 
 Mime::Mime()
 {
-    std::ifstream file("../mime.txt");
+    std::ifstream file("./mime.txt");
     std::string line;
     std::vector<std::string> pairs;
     
@@ -30,6 +30,10 @@ Mime::~Mime()
 {
 }
 
+std::map<std::vector<std::string>, std::string>	Mime::getMime()const{
+	return mime;
+}
+
 std::string Mime::operator[](std::string const &key)
 {
     std::map<std::vector<std::string>, std::string>::iterator it;
@@ -40,17 +44,3 @@ std::string Mime::operator[](std::string const &key)
     }
     return ("text/plain");
 }
-
-// void Mime::print()
-// {
-//     std::map<std::vector<std::string>, std::string>::iterator it;
-//     for (it = mime.begin(); it != mime.end(); it++)
-//     {
-//         std::cout << it->second << " : ";
-//         for (std::vector<std::string>::iterator it2 = it->first.begin(); it2 != it->first.end(); it2++)
-//         {
-//             std::cout << *it2 << " ";
-//         }
-//         std::cout << std::endl;
-//     }
-// }

@@ -6,20 +6,19 @@
 #include	"../inc/Mime.hpp"
 #include	"../inc/Response.hpp"
 
-#define	CRLF			"\r\n"
-#define	CRLFx2		"\r\n\r\n"
+#define	CRLF					"\r\n"
+#define	CRLFx2				"\r\n\r\n"
+#define	DEFAULT_INDEX	"/html/index.html"
 
 
-void respond_connection(int &client, Server &server, URI &rq){
-/*	check_body_size(server, rq);
-
-
-	cout << "\tStatus is->[" << rq.getStatusCode() << "]" << std::endl;
+bool	responding_when_error(int &client, Server &server, URI &rq){
+	string	response("HTTP/1.1 ");
 	string	parseErrs("400 404 405 406 409 411 413 414 415 417 500 501 502 505 507");
 	string	status(rq.getStatusCode());
+
+	cout << "\tStatus is->[" << rq.getStatusCode() << "]" << std::endl;
 	status = status.size() > 0 ? status.substr(0, 3) : status;
 	if (status.size() > 0  && parseErrs.find(status) != string::npos){
-		string	response("HTTP/1.1 ");
 		response += rq.getStatusCode();
 		response += CRLF;
 		fill_4xx_5xx_response(response, rq, server);
@@ -27,23 +26,39 @@ void respond_connection(int &client, Server &server, URI &rq){
 		if (send(client, response.c_str(), response.size(), 0) == -1){
 			cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		}
-	}*/
+		rq.setCloseConnection(true);
+		return (true);
+	}
+	return (false);
+}
+
+void respond_connection(int &client, Server &server, URI &rq){
+	check_body_size(server, rq);
+
+	if (responding_when_error(client, server, rq)){
+		return ;
+	}
+
+
+	rq.setStatusCode(STATUS_200);
+	if (rq.getPath() == "/"){
+		rq.setPath(DEFAULT_INDEX);
+	}
+	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	//		JOSELITOOO
 	Response	response(rq);
 
 	response.handleResponse(server);
 	std::string res = response.getResponse();
-	//cerr << RED << "PRE SEND " << client << EOC << std::endl;
-	//cerr << CYA << "responseeeeeeeee[" << displayHiddenChars(res) << "]" << EOC << std::endl;
-	int test = send(client, res.c_str(), res.size(), 0);
+	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 
 	cerr << CYA << "\nRESPONSE>:\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
-	//cerr << CYA << test << EOC << std::endl;
-	if (test == -1)
-		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
-	//cerr << RED << " SEND " << client << EOC << std::endl;
 
-	cout << RED << "Responding client " << client << " !!" << EOC << std::endl;
+	if ( send(client, res.c_str(), res.size(), 0) == -1){
+		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
+	}
+
+	cout << RED << "Response sent " << client << " !!" << EOC << std::endl;
 	rq.setCloseConnection(true);
 }
 

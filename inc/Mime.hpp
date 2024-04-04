@@ -16,5 +16,6 @@ class Mime
         Mime();
         ~Mime();
         void print();
+        std::map<std::vector<std::string>, std::string>	getMime()const;
         std::string operator[](std::string const &key);
 };

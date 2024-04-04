@@ -32,14 +32,12 @@ class Response
 				//Getters & Setter
         Server 	getServer();
         Route  	getRoute(Server &);
-        string	getRequestedResource(string const & uri);
         Route		findBestMatchInRoute(Route & route, string const & resource);
         Route		findBestMatchInServer(Server & server, string const & resource);
         string	getFilePath(Server const & server, Route const & route);
         string	tryFiles(Server const & server, Route const & route, string & root);
 
         void		readContent(string const &filePath, string code);
-        void		checkMethods(Route const & route);
         void 		checkRedirection(Route const & route);
 
         void 		handleGet(Server &server, Route const & route);

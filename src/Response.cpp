@@ -1,6 +1,7 @@
 #include "../inc/Response.hpp"
 #include "../inc/headers.hpp"
 
+#define	CRLF			"\r\n"
 
 Response::Response(URI &rq)
 {
@@ -20,21 +21,14 @@ void Response::checkRedirection(Route const & route)
 {
     if (!route.getRedirect().empty())
     {
-        headers[LOCATION_H] = route.getRedirect();
+        headers["Location"] = route.getRedirect();
         throw ServerException(STATUS_301);
     }
 }
 
-void Response::checkMethods(Route const & route)
+std::pair<string, bool>    getMatchedPath(string serverRootPath, string path)
 {
-    std::vector<std::string> methods = route.getMethods();
-    if (!methods.empty() && std::find(methods.begin(), methods.end(), request->getMethod2()) == methods.end())
-        throw ServerException(STATUS_405);
-}
-
-std::pair<std::string, bool>    getMatchedPath(std::string serverRootPath, std::string path)
-{
-    std::pair<std::string, bool> value;
+    std::pair<string, bool> value;
     value.second = false;
     trimTrailingSlashes(serverRootPath);       
     if (path.find(serverRootPath) == 0)
@@ -50,7 +44,7 @@ std::pair<std::string, bool>    getMatchedPath(std::string serverRootPath, std::
     return (value);
 }
 
-bool CheckInDirectory(std::string path)
+bool CheckInDirectory(string path)
 {
     struct stat stat_buf;
     if (stat(path.c_str(), &stat_buf) != 0)
@@ -58,7 +52,7 @@ bool CheckInDirectory(std::string path)
     return (S_ISDIR(stat_buf.st_mode));
 }
 
-bool CheckIfInFile(std::string path)
+bool CheckIfInFile(string path)
 {
     struct stat stat_buf;
     if (stat(path.c_str(), &stat_buf) != 0)
@@ -66,7 +60,7 @@ bool CheckIfInFile(std::string path)
     return (S_ISREG(stat_buf.st_mode));
 }
 
-Route Response::findBestMatchInRoute(Route & route, std::string const & resource)
+Route Response::findBestMatchInRoute(Route & route, string const & resource)
 {
     if (CheckInDirectory(route.getRoot() + resource))
     {
@@ -75,7 +69,7 @@ Route Response::findBestMatchInRoute(Route & route, std::string const & resource
                 throw ServerException(STATUS_409);
             else
             {
-                headers[LOCATION_H] = route.getPath() + resource + "/";
+                headers["Location"] = route.getPath() + resource + "/";
                 throw ServerException(STATUS_301);
             }
         }
@@ -93,8 +87,9 @@ Route Response::findBestMatchInRoute(Route & route, std::string const & resource
     throw ServerException(STATUS_404);
 }
 
-Route Response::findBestMatchInServer(Server & server, std::string const & resource)
-{
+Route Response::findBestMatchInServer(Server & server, string const & resource)
+{ 
+    std::cout << RED << "FIND BEST MATCH: root:" << server.getRoot() << " resource:" << resource << EOC << std::endl;
     if (CheckInDirectory(server.getRoot() + resource))
     {
         if (resource.back() != '/')
@@ -103,72 +98,62 @@ Route Response::findBestMatchInServer(Server & server, std::string const & resou
                 throw ServerException(STATUS_409);
             else
             {
-                headers[LOCATION_H] = resource + "/";
+                headers["Location"] = resource + "/";
                 throw ServerException(STATUS_301);
             }
         }
         Route newRoute(server.getRoot() + resource, resource, Route::DIRECTORY);
         newRoute.setAllowListing(server.getAllowListing());
+    		std::cout << RED << "Returning Route: root->" << newRoute.getRoot() << " path->" << newRoute.getPath() << EOC << std::endl;
         return (newRoute);
     }
     else if (CheckIfInFile(server.getRoot() + resource))
         return (Route(server.getRoot(), resource, Route::FILE));
+		request->setStatusCode(STATUS_404);
     throw ServerException(STATUS_404);
-    }
+}
 
-Route Response::deepSearch(Server & server, std::string const & resource)
+Route Response::deepSearch(Server & server, string const & resource)
 {
-    std::vector<Route> routes = server.getRoutes();
-    for (std::vector<Route>::iterator it = routes.begin(); it != routes.end(); it++)
+    std::cout << RED << "DEEP SEARCH: " << resource << EOC << std::endl;
+    vector<Route> routes = server.getRoutes();
+    for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it)
     {
-        std::pair<std::string, bool>   matchedPath = getMatchedPath(it->getPath(), resource);
+        std::pair<string, bool>   matchedPath = getMatchedPath(it->getPath(), resource);
         if (matchedPath.second)
         {
-            std::string newResource = "/" + matchedPath.first;
+            string newResource = "/" + matchedPath.first;
             removeConsecutiveChars(newResource, '/');
             Route route = findBestMatchInRoute(*it, newResource);
             checkRedirection(*it);
-            checkMethods(*it);
             return (route);
         }
     }
     return (findBestMatchInServer(server, resource)); 
 }
 
-std::string Response::getRequestedResource(std::string const & uri)
-{
-    std::string resource = uri;
-    size_t pos = resource.find('?');
-    if (pos != std::string::npos)
-        resource = resource.substr(0, pos);
-    return (resource);
-}
-
 Route Response::getRoute(Server & server)
 {
-    std::string resource = getRequestedResource(request->getUri());
-    std::vector<Route>::iterator it = server.find(resource);
+    string resource = request->getPath();
+    vector<Route>::iterator it = server.find(resource);
 
+    std::cout << RED << "RESOURCE IS: " << resource << EOC << std::endl;
     if (it == server.end())
         return (deepSearch(server, resource));
     if (resource.back() != '/')
     {
-        if (request->getMethod2() == "DELETE")
+        if (request->getMethod() == 'd')
             throw ServerException(STATUS_409);
-        headers[LOCATION_H] = request->getUri() + "/";
+        headers["Location"] = request->getUri() + "/";
         throw ServerException(STATUS_301);
     }
     checkRedirection(*it);
-    checkMethods(*it);
-    if (request->getMethod2() != "GET" && server.getClientMaxBodySize() != 0 && \
-            request->getBody().size() > server.getClientMaxBodySize())
-        throw ServerException(STATUS_413);
     return (*it);
 }
 
 Server Response::getServer()
 {
-    std::vector<Server>::iterator it = Config::find(request->getHost(), request->getPort());
+    vector<Server>::iterator it = Config::find(request->getHost(), request->getPort());
     if (it != Config::end())
         if (request->getMethod2() != "GET" && it->getClientMaxBodySize() != 0 && \
             request->getBody().size() > it->getClientMaxBodySize())
@@ -181,16 +166,16 @@ Server Response::getServer()
     return (s);
 }
 
-void Response::readContent(std::string const &filePath, string code)
+void Response::readContent(string const &filePath, string code)
 {
     std::ifstream file(filePath);
-    std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(std::string const &filePath, string code)" << EOC << std::endl;
+    std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(string const &filePath, string code)" << EOC << std::endl;
 
     if (file.is_open())
     {
-        headers[CONTENT_TYPE_H] = mime[Cgi::getFileExt(filePath)];
-        std::stringstream buffer;
-        std::string line;
+        headers["Content-Type"] = mime[Cgi::getFileExt(filePath)];
+				std::stringstream buffer;
+        string line;
         while (std::getline(file, line))
             buffer << line << std::endl;
         body = buffer.str();
@@ -205,7 +190,7 @@ void Response::readContent(std::string const &filePath, string code)
 
 void Response::handleGet(Server &server, Route const & route)
 {
-    std::string filePath = getFilePath(server, route);
+    string filePath = getFilePath(server, route);
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleGet(Server &server, Route const & route)" << EOC << std::endl;
     if (isListing)
         return;
@@ -213,9 +198,9 @@ void Response::handleGet(Server &server, Route const & route)
     if (!route.getCgi().empty())
     {
         Cgi cgi(route, filePath, *request);
-        std::map<std::string, std::string> Cgiheaders = cgi.getResponseHeaders();
-        if (Cgiheaders.find(CONTENT_TYPE_H) == Cgiheaders.end())
-            headers[CONTENT_TYPE_H] = "text/html";
+        std::map<string, string> Cgiheaders = cgi.getResponseHeaders();
+        if (Cgiheaders.find("Content-Type") == Cgiheaders.end())
+            headers["Content-Type"] = "text/html";
         headers.insert(Cgiheaders.begin(), Cgiheaders.end());
         body = cgi.getResponseBody();
         return; 
@@ -223,20 +208,20 @@ void Response::handleGet(Server &server, Route const & route)
     readContent(filePath, STATUS_200);
 }
 
-std::string Response::tryFiles(Server const & server, Route const & route, std::string & root)
+string Response::tryFiles(Server const & server, Route const & route, string & root)
 {
     if (route.getRouteType() == Route::DIRECTORY)
         root = route.getRoot();
-    std::vector<std::string> indexes;
+    vector<string> indexes;
     if (route.getRouteType() == Route::FILE)
         indexes.push_back(route.getPath());
     else
         indexes = route.getIndex().empty() \
-            ? (server.getIndex().empty() ? std::vector<std::string>() : server.getIndex()) \
+            ? (server.getIndex().empty() ? vector<string>() : server.getIndex()) \
             : route.getIndex();
     indexes.push_back("index.html");
-    std::string filePath;
-    for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); it++)
+    string filePath;
+    for (vector<string>::iterator it = indexes.begin(); it != indexes.end(); it++)
     {
         filePath = root + "/" + *it;
         std::ifstream file(filePath);
@@ -247,19 +232,22 @@ std::string Response::tryFiles(Server const & server, Route const & route, std::
         }
         file.close();
     }
-    std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, std::string & root)" << EOC << std::endl;
+    std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, string & root)" << EOC << std::endl;
     if (route.getRouteType() != Route::FILE)
         throw ServerException(STATUS_404);// TO DO: Mirar qué error mandar
     throw ServerException(STATUS_404);
 }
 
-std::string Response::getFilePath(Server const & server, Route const & route)
+string Response::getFilePath(Server const & server, Route const & route)
 {
+
+    std::cout << RED << "GETTING FILE PATH--- " << EOC << std::endl;
     if (route.getRouteType() == Route::FILE)
-        return route.getRoot() + "/" + route.getPath();
+    	std::cout << RED << "FILE PATH -- IS FILE" << EOC << std::endl;
+      return route.getRoot() + "/" + route.getPath();
     try
     {
-        std::string root, index;
+        string root, index;
         root = route.getRoot().empty() ? server.getRoot() : route.getRoot();
         index = tryFiles(server, route, root);
         return root + "/" + index;
@@ -270,7 +258,7 @@ std::string Response::getFilePath(Server const & server, Route const & route)
         {
             if (request->getMethod2() == "DELETE")
                 return route.getRoot() + "/";
-            std::vector<std::string> files = getFilesInDirectory(route.getRoot(), route.getPath());
+            vector<string> files = getFilesInDirectory(route.getRoot(), route.getPath());
             return (isListing = true, body = generateHtmlListing(files), "");
         }
         throw ServerException(request->getStatusCode());
@@ -279,13 +267,13 @@ std::string Response::getFilePath(Server const & server, Route const & route)
 
 void Response::handleDelete(Server &server, Route const & route)
 {
-    std::string filePath = getFilePath(server, route);
+    string filePath = getFilePath(server, route);
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleDelete(Server &server, Route const & route)" << EOC << std::endl;
     removeConsecutiveChars(filePath, '/');
     if (!route.getCgi().empty())
     {
         Cgi cgi(route, filePath, *request);
-        std::map<std::string, std::string> Cgiheaders = cgi.getResponseHeaders();
+        std::map<string, string> Cgiheaders = cgi.getResponseHeaders();
         headers.insert(Cgiheaders.begin(), Cgiheaders.end());
         body = cgi.getResponseBody();
         return; 
@@ -293,65 +281,65 @@ void Response::handleDelete(Server &server, Route const & route)
     removeFileOrDirectory(filePath);
 }
 
-void Response::processUrlEncodedBody(const std::string& body)
+void Response::processUrlEncodedBody(const string& body)
 {
-    std::map<std::string, std::string> queryStrings;
-    std::vector<std::string> params = ft_split(body, "&");
+    std::map<string, string> queryStrings;
+    vector<string> params = ft_split(body, "&");
 
-    for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it)
+    for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it)
     {
-        std::vector<std::string> param = ft_split(*it, "=");
+        vector<string> param = ft_split(*it, "=");
         if (param.size() == 2)
             queryStrings[param[0]] = param[1];
     }
 }
 
-void Response::processFileUpload(std::istringstream& ss, const std::string& line, Route const & route)
+void Response::processFileUpload(std::istringstream& ss, const string& line, Route const & route)
 {
     int len = line.find("\"", line.find("filename") + 10) - line.find("filename") - 10;
-    std::string filename = route.getUploadDir() + "/" + line.substr(line.find("filename") + 10, len);
+    string filename = route.getUploadDir() + "/" + line.substr(line.find("filename") + 10, len);
     std::ofstream file(filename.c_str());
-    std::string content;
+    string content;
     std::getline(ss, content);
     std::getline(ss, content);
     while (std::getline(ss, content))
         file << content << "\n";
 }
 
-void Response::processFormField(std::istringstream& ss, const std::string& line, std::map<std::string, std::string>& queryStrings)
+void Response::processFormField(std::istringstream& ss, const string& line, std::map<string, string>& queryStrings)
 {
     int len = line.find("\"", line.find("name") + 6) - line.find("name") - 6;
-    std::string name = line.substr(line.find("name") + 6, len);
-    std::string content;
+    string name = line.substr(line.find("name") + 6, len);
+    string content;
     std::getline(ss, content);
     std::getline(ss, content);
     std::getline(ss, content, '\0');
     queryStrings[name] = content;
 }
 
-void Response::processMultipartFormDataBody(const std::string& body, Route const & route)
+void Response::processMultipartFormDataBody(const string& body, Route const & route)
 {
-    std::map<std::string, std::string> queryStrings;
-    std::string boundary = request->getBoundary();
-    std::vector<std::string> params = ft_split(body, "--" + boundary);
+    std::map<string, string> queryStrings;
+    string boundary = request->getBoundary();
+    vector<string> params = ft_split(body, "--" + boundary);
 
-    for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it)
+    for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it)
     {
         std::istringstream ss(*it);
-        std::string line;
+        string line;
         std::getline(ss, line);
 
-        if (line.find("filename") != std::string::npos)
+        if (line.find("filename") != string::npos)
             processFileUpload(ss, line, route);
-        else if (line.find("name") != std::string::npos)
+        else if (line.find("name") != string::npos)
             processFormField(ss, line, queryStrings);
     }
 }
 
 void Response::readBody(Route const & route)
 {
-    const std::string& contentType = request->getContentType();
-    const std::string& body = request->getBody();
+    const string& contentType = request->getContentType();
+    const string& body = request->getBody();
     
     if (contentType == "application/x-www-form-urlencoded")
         processUrlEncodedBody(body);
@@ -363,11 +351,11 @@ void Response::handlePost(Server &server, Route const & route)
 {
     if (!route.getCgi().empty())
     {
-        std::string filePath = getFilePath(server, route);
+        string filePath = getFilePath(server, route);
          std::cout << CYA << "FILEPATH IS : " << filePath << " <---handlePost(Server &server, Route const & route)" << EOC << std::endl;
         removeConsecutiveChars(filePath, '/');
         Cgi cgi(route, filePath, *request);
-        std::map<std::string, std::string> Cgiheaders = cgi.getResponseHeaders();
+        std::map<string, string> Cgiheaders = cgi.getResponseHeaders();
         headers.insert(Cgiheaders.begin(), Cgiheaders.end());
         body = cgi.getResponseBody();
         return; 
@@ -376,7 +364,7 @@ void Response::handlePost(Server &server, Route const & route)
     throw ServerException(STATUS_201);
 }
 
-std::string getDateGMT()
+string getDateGMT()
 {
     std::time_t t = std::time(0);
     std::tm tm = *std::gmtime(&t);
@@ -385,25 +373,23 @@ std::string getDateGMT()
     return (ss.str());
 }
 
-std::string Response::getResponse()
+string Response::getResponse()
 {
     std::stringstream ss;
 
-    ss << "HTTP/1.1 " << "200 OK" << "\r\n";
-    ss << "Content-Type: " << "text/html; charset=UTF-8\r\n";
-    ss << "Server: webserv/1.0\r\n";
-    ss << "Date: " << getDateGMT() << "\r\n";
-    ss << "Content-Length: " << toString(body.size()) << "\r\n";
-    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
-        ss << it->first << ": " << it->second << "\r\n";
-    ss << "\r\n";
+    ss << "HTTP/1.1 " << request->getStatusCode() << CRLF;
+    ss << "Server: webserv/1.0" << CRLF;
+    ss << "Date: " << getDateGMT() << CRLF;
+    ss << "Content-Length: " << toString(body.size()) << CRLF;
+    for (std::map<string, string>::iterator it = headers.begin(); it != headers.end(); it++)
+        ss << it->first << ": " << it->second << CRLF;
+    ss << CRLF;
     ss << body;
 
-    //ss << "HTTP/1.1 200 OK\r\nContent-type: text/html\r\nContent-length: 13\r\n\n<h1>Hola</h1>";
     return (ss.str());
 }
 
-void    Response::setStatus(std::string codestr)
+void    Response::setStatus(string codestr)
 {
     if (code == "")
         code = codestr;
@@ -413,26 +399,28 @@ void Response::handleResponse(Server &server)
 {
     try
     {
-        if (code != STATUS_200)
-            throw ServerException(code);
+        std::cout << RED << "START TO HANDLE PACOO"<< EOC << std::endl;
+				headers["Content-Type"] = "text/html";
         Route route = getRoute(server);
-        if (request->getMethod2() == "GET")
+        if (request->getMethod() == 'g')
         {
+            std::cout << RED << "IN GET "<< EOC << std::endl;
             handleGet(server, route);
-            //std::cout << RED << "IN GET "<< EOC << std::endl;
         }
-        else if (request->getMethod2() == "POST")
+        else if (request->getMethod() == 'p')
         {
+            std::cout << RED << "IN POST "<< EOC << std::endl;
             handlePost(server, route);
-            //std::cout << RED << "IN POST "<< EOC << std::endl;
         }
-        else if (request->getMethod2() == "DELETE")
+        else if (request->getMethod() == 'd')
         { 
+            std::cout << RED << "IN POST "<< EOC << std::endl;
             handleDelete(server, route);
-            //std::cout << RED << "IN POST "<< EOC << std::endl;
         }
-        else
+        else {
+            std::cout << RED << "IN EXCEPT"<< EOC << std::endl;
             throw ServerException(STATUS_501);			//TO DO: Todo lo que sean throws, convertirlos en send
+				}
     }
     catch (ServerException & e)
     {
@@ -442,10 +430,8 @@ void Response::handleResponse(Server &server)
         ss >> c;
         std::cout << CYA << "///////////////////////1st C IS 1: " << c << EOC << std::endl;
         std::cout << CYA << "///////////////////////1st CODE IS 1: " << code << EOC << std::endl;
-        //std::cout << CYA << "///////////////////////1st SS IS 1: " << ss << EOC << std::endl;
         std::cout << CYA << "///////////////////////1st FILEPATH IS 1: " << server.getErrorPages()[c] << EOC << std::endl;
         readContent(server.getErrorPages()[c], code);
-        //readContent(404, "404 Not Found");
     }
     catch (std::exception & e)
     {

@@ -16,7 +16,7 @@ private:
 	char **envp;
     
 public:
-    Cgi();
+  Cgi();
 	Cgi(Route const & cgiRoute, std::string const & filename, URI const & req);
 	Cgi(Cgi const& other);
 	~Cgi();

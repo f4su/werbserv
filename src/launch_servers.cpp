@@ -18,10 +18,14 @@ typedef sockaddr_in sa_in;
 
 void	listening_connections(vector<Server> servers)
 {
-	fd_set			readfds, fdNow;
-	vector<int>	clients;
+	fd_set					readfds, writefds, fdNow;
+	vector<int>			clients;
+  struct timeval	timeout;
 
+	timeout.tv_sec = 20;
+  timeout.tv_usec = 0;
 	FD_ZERO(&readfds);
+	FD_ZERO(&writefds);
 	for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
 		FD_SET(it->getSocket(), &readfds);
 		if (it->getSocket() > it->getMax()){
@@ -34,6 +38,7 @@ void	listening_connections(vector<Server> servers)
 		cout << MAG << "v...Waiting for connections...v" << EOC << std::endl;
 		cout << MAG << "MAX->" << servers[0].getMax() << EOC << std::endl;
 
+		/*
 		for (vector<Server>::iterator	it = servers.begin(); it != servers.end(); ++it){
 			cout << MAG << "Socket---->" << it->getSocket() << EOC << std::endl;
 			if (!it->getClients().empty()){
@@ -41,13 +46,14 @@ void	listening_connections(vector<Server> servers)
 				cout << MAG << "CLieeents---->" << EOC << std::endl;
 				printContainer(clients);
 			}
-		}
+		}*/
 
 
-		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, NULL) < 0){ //tiene que ser para read y write a la vez
+		if (select(servers[0].getMax() + 1, &fdNow, NULL, NULL, timeout) < 0){ //tiene que ser para read y write a la vez
 			close_sockets(servers);
+			perror("Socket errorrr");
 			throw ServerException("Error when multiplexing with select()");
-		}///////
+		}
 		for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
 			if (handle_sockets(*it, servers, fdNow, readfds, true, 0)){
 				break ;
@@ -91,7 +97,7 @@ bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &ready, fd_s
 			cout << "Socket going to accept" << std::endl;
 			accept_connection(socket, server, all);
 			return (true);
-		}//
+		}
 		read_connection(socket, server, server.getClientUri().at(client));
 		
 		if (server.getClientUri().at(client).getCloseConnection()){

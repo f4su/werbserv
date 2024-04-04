@@ -29,6 +29,6 @@ port = 3030
 server_names = localhost
 client_max_body_size = 100000
 error_pages = 404:www/error_pages/404.html
-root = www
+root = .
 index = test.html
 </server>
