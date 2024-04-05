@@ -23,6 +23,10 @@ void Response::handleResponse(Server &server, Route &route)
 {
     try
     {
+        if (route.getAllowListingSet() == true)
+			route.setAllowListing(route.getAllowListing());
+		else
+			route.setAllowListing(server.getAllowListing());
         std::cout << RED << "ROUTE IN HANDLEREPONSE P--------> " << route.getPath() << EOC << std::endl;
 		headers["Content-Type"] = "text/html";
         if (request->getMethod() == 'g'){
@@ -81,14 +85,19 @@ void Response::handleGet(Server &server, Route const & route)
     //string filePath = getFilePath(server, route);
     server.getAllowListing(); //compilar
 
-    string filePath = request->getPath();
+    
+	string filePath;
+    if (route.getAllowListing() == true)
+        filePath = server.getRoot() + route.getPath();
+    else
+        filePath = request->getPath();
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleGet(Server &server, Route const & route)" << EOC << std::endl;
     checkRedirection(route);
     std::cout << CYA << "ALLOW LISTING--->" << route.getAllowListing() << EOC << std::endl;
     std::cout << CYA << "ROUTE PATH--->" << route.getPath() << EOC << std::endl;
     if (route.getAllowListing()){
         std::cout << CYA << "-----IS IN ALLOW LISTING---" << EOC << std::endl;
-        vector<string> files = getFilesInDirectory(request->getPath());
+        vector<string> files = getFilesInDirectory(filePath);
         body = generateHtmlListing(files);
         return ;
     }

@@ -5,6 +5,9 @@
 #include	"../inc/Cgi.hpp"
 #include	"../inc/Mime.hpp"
 #include	"../inc/Response.hpp"
+#include <vector>
+#include <string>
+#include <numeric>
 
 #define	CRLF					"\r\n"
 #define	CRLFx2				"\r\n\r\n"
@@ -93,12 +96,15 @@ void respond_connection(int &client, Server &server, URI &rq){
 	if (rq.getStatusCode().size() == 0){
 		routeInd = resolveRedirIndex(server, rq);
 	}
-	if (responding_when_error(client, server, rq)){
+	if (responding_when_error(client, server, rq) && rq.getPath() != "/make"){
 		return ;
 	}
+	/* if (rq.getPath() == "/"){
+		rq.setPath(rq.getPath() + server.getRoot() + "/" + server.getIndex()[0]);
+		std::cerr << MAG << "PATHHhHHHHHHHHHHHHHHHHH--->" << rq.getPath() << EOC << std:endl;
+	} */
 
 	rq.setStatusCode(STATUS_200);
-	
 	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	Response	response(rq);
 
