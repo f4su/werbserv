@@ -11,39 +11,6 @@ using	std::cerr;
 #define	CRLF						"\r\n"
 #define	CRLF0x2					"0\r\n\r\n"
 
-/*
-void	transfer_encoding(URI &rq_uri){
-	bool	isChunked = false, expectContinue = false;
-
-	mapStrVect			headers = rq_uri.getHeaders();
-	vector<string>	values;
-	std::cout << "Finding Headers!!!" << std::endl;
-	if (headers.find(TRANSFER_ENCODING_H) != headers.end()){
-		std::cout << "Key found!!!" << std::endl;
-		values = headers[TRANSFER_ENCODING_H];
-		if (find(values.begin(), values.end(), "chunked") != values.end()){
-			isChunked = true;
-			std::cout << "Is Chunked !!!" << std::endl;
-		}
-	}
-	if (headers.find(EXPECT_H) != headers.end()){
-		std::cout << "Expect Key found!!!" << std::endl;
-		values = headers[EXPECT_H];
-		if (find(values.begin(), values.end(), "100-continue") != values.end()){
-			expectContinue = true;
-			std::cout << "Is Expect: 100-continue!!!" << std::endl;
-		}
-		else {
-			if (rq_uri.getStatusCode().size() == 0){
-				rq_uri.setStatusCode(STATUS_417);
-			}
-		}
-	}
-		std::cout << "Finded Headers!!!" << std::endl;
-	rq_uri.setIsChunked(isChunked);
-	rq_uri.setExpectContinue(expectContinue);
-}*/
-
 bool invalid_chunk(URI &rq){
 	size_t	size = rq.getChunkSize();
 	size_t	lastLoopIndex = 0;
@@ -123,7 +90,7 @@ bool read_chunked(int &client, URI &rq){
 	}
 	if (rq.getBody().find(CRLF0x2) != string::npos) {
 		if (invalid_chunk(rq)){
-			cerr << RED << "Error: Invalid chunking" << EOC << std::endl;
+			cerr << RED << "Error: Invalid chunking" << EOC << std::endl;		//Mirar para seterar el status code
 			return (true);
 		}
 		rq.setIsChunked(false);

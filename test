@@ -5,51 +5,74 @@
     client_max_body_size = 100000000000000
     error_pages = 404:www/error_pages/404.html 500:www/error_pages/500.html
     root = www
-    index = index.html
+    allow_listing = true
+    index = /index.html
+
+    <route path="/">
+    		root = www
+    		index = /index.html
+    		allow_listing = false
+    </route>
+	
     <route path="/testing">
         redirect = /test
     </route>
+	
     <route path="/test">
         index = /test.html
-        allow_listing = false
+        allow_listing = true
     </route>
+	
     <route path="/kapouet">
         root = www/error_pages
         redirect = /error_pages
     </route>
+	
     <route path="/error_pages">
     </route>
+	
     <route path="/cgi_scripts">
         root = www/cgi_scripts
         methods = GET, POST, DELETE
         cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
     </route>
+
     <route path="/method">
         methods = POST
     </route>
+	
     <route path="/uploads">
         root = www/uploads
         methods = POST, GET
-        upload_dir = www/uploads/uploads
+        upload_dir = www/uploads/uploaded
+        index = /uploads.html
+    		allow_listing = false
     </route>
+	
     <route path="/post">
         root = www/cgi-scripts
         methods = POST
-        index = Post.php
+        index = /F_Post.php
         cgi = .php:cgi-bin/php-cgi
+    		allow_listing = false
     </route>
+
     <route path="/delete">
         methods = DELETE
         root = www/uploads/uploads
     </route>
+
+
 </server>
 
 <server>
     host = 127.0.0.1
-    port = 3000
+    port = 3030
     server_names = localhost
     client_max_body_size = 100000
     error_pages = 404:www/error_pages/404.html
-    root = www
-    index = idk.html
+    <route path="/">
+    		root = www
+    		index = /idk.html
+    </route>
 </server>

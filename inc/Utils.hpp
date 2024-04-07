@@ -41,6 +41,7 @@ std::string toString(T value)
 
 void                        trim(std::string &);
 std::vector<std::string>    ft_split(const std::string &, const std::string &);
+std::vector<std::string>		ft_split_by_string(const std::string &s, const std::string &delimiter);
 bool                        mapErrorPages(std::map<int, std::string> & errorPages, std::string const & value);
 bool                        mapCgi(std::map<std::string, std::string> & cgi, std::string const & value);
 void                        trimTrailingSlashes(std::string & s);

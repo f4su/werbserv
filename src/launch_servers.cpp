@@ -52,21 +52,9 @@ void	listening_connections(vector<Server> servers)
 		setSockets(readfds, writefds, servers);
 		cout << MAG << "v...Waiting for connections...v" << EOC << std::endl;
 		cout << MAG << "MAX->" << servers[0].getMax() << EOC << std::endl;
-
-		/*
-		for (vector<Server>::iterator	it = servers.begin(); it != servers.end(); ++it){
-			cout << MAG << "Socket---->" << it->getSocket() << EOC << std::endl;
-			if (!it->getClients().empty()){
-				vector<int> clients = it->getClients();
-				cout << MAG << "CLieeents---->" << EOC << std::endl;
-				printContainer(clients);
-			}
-		}*/
-
-
-		if (select(servers[0].getMax() + 1, &readfds, &writefds, NULL, &timeout) < 0){ //tiene que ser para read y write a la vez
+		if (select(servers[0].getMax() + 1, &readfds, &writefds, NULL, &timeout) < 0){
 			close_sockets(servers);
-			perror("Socket errorrr");
+			perror("Socket error");
 			throw ServerException("Error when multiplexing with select()");
 		}
 		for (vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it){
@@ -126,7 +114,6 @@ bool	handle_sockets(Server &server, vector<Server> &servers, fd_set &readfds, fd
 	if (FD_ISSET(socket, &writefds)){
 		respond_connection(client, server,  server.getClientUri().at(client));
 		close_client_connection(client, server, servers, writefds);
-		//FD_CLR(client, &all); // ??
 	}
 	return (false);
 }
@@ -135,7 +122,8 @@ void read_connection(int &client, Server &server, URI &rq){
 	char request[MAXLINE];
 	ssize_t	readed;
 
-	if (server.getClientUri().at(client).getIsChunked() == false){
+	if (server.getClientUri().at(client).getIsChunked() == false &&
+		server.getClientUri().at(client).getIsMultipart() == false){
 		memset(request, 0, MAXLINE);
 		cerr << RED << "Going to read request (client " << client << ")" << EOC << std::endl;	
 		readed = recv(client, request, sizeof(request), 0);
@@ -161,12 +149,11 @@ void read_connection(int &client, Server &server, URI &rq){
 
 	}
 	size_t	crlf = rq.getRequest().find(CRLFx2);
-	//size_t	https = rq.getRequest().find(HTTPS);
 	if (crlf != string::npos){
 		if (rq.getRequest().size() > crlf + 4){
 			string body = rq.getRequest().substr(crlf + 4, rq.getRequest().size());
 			rq.setBody(body);
-			cout << CYA << "Body is+++++++>[" << 	rq.getBody() << std::endl << "]" << std::endl;
+			//cout << CYA << "Body is+++++++>[" << 	rq.getBody() << std::endl << "]" << std::endl;
 		}
 		parse_rq(client, server, server.getClientUri().at(client)); 
 	}
@@ -176,7 +163,6 @@ void parse_rq(int &client, Server &server, URI &rq){
 	if (rq.getHeadersParsed() == false && invalid_request(rq, server)){
 		cout << RED << "/JOSEEEEEEE//////////STATUS CODE----> " << rq.getStatusCode()<< EOC << std::endl;
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
-		//respond_connection(client, server, rq);
 		rq.setGoingToResponse(true);
 		return ;
 	}
@@ -185,16 +171,21 @@ void parse_rq(int &client, Server &server, URI &rq){
 		cout << CYA << "-100 sent" << EOC << std::endl;
 		rq.setExpectContinue(false);
 	}
-	if (rq.getIsChunked()){
-		if (read_chunked(client, rq)){
-			cout << RED << "Error: Invalid Chunked request on server " << server.getPort() << " from client " << client << EOC << std::endl;
-			//respond_connection(client, server, rq);
+	if (rq.getIsMultipart()){
+		if (read_multipart(client, rq)){
+			cout << RED << "Error: Invalid Multipart request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 			rq.setGoingToResponse(true);
 			return ;
 		}
 	}
-	if (rq.getIsChunked() == false){
-		//respond_connection(client, server, rq);
+	else if (rq.getIsChunked()){
+		if (read_chunked(client, rq)){
+			cout << RED << "Error: Invalid Chunked request on server " << server.getPort() << " from client " << client << EOC << std::endl;
+			rq.setGoingToResponse(true);
+			return ;
+		}
+	}
+	if (rq.getIsChunked() == false && rq.getIsMultipart() == false){
 		rq.setGoingToResponse(true);
 	}
 }

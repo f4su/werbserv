@@ -7,7 +7,8 @@ using	std::cout;
 
 bool	invalid_values(const string &token, URI &rq_uri, size_t p_start, size_t pr_start, size_t f_start, char *form){
 
-	cout << "Form iss -> [" << form << "]" << std::endl;
+	//string	formStr(form);
+	cout << "Form iss -> [" << form[0] << "]" << std::endl;
 	//Authority (optinal) must begin with // and end with /, ?, # or the end of the URI. It doesn't appear in origin form
 	if ((*form == 'a' && p_start !=  string::npos) ||
 			(*form == 'y')){

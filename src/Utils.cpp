@@ -31,6 +31,24 @@ std::vector<std::string> ft_split(const std::string &s, const std::string &delim
     return (splited);
 }
 
+std::vector<std::string> ft_split_by_string(const std::string &str, const std::string &delimiter)
+{
+    std::vector<std::string> tokens;
+    std::string::size_type start = 0;
+    std::string::size_type end = 0;
+
+    while ((end = str.find(delimiter, start)) != std::string::npos) {
+        std::string token = str.substr(start, end - start);
+        tokens.push_back(token);
+        start = end + delimiter.length();
+    }
+
+    std::string lastToken = str.substr(start);
+    tokens.push_back(lastToken);
+
+    return tokens;
+}
+
 bool    mapErrorPages(std::map<int, std::string> & errorPages, std::string const & value)
 {
     std::vector<std::string>    pages = ft_split(value, ", ");
@@ -164,13 +182,13 @@ void removeFileOrDirectory(std::string path)
     if (isFile(path))
     {
         removeFile(path);
-        throw ServerException(STATUS_204); // send ()
+        throw ServerException(STATUS_204);
     }
     else if (isDirectory(path))
     {
         removeDirectory(path);
-        throw ServerException(STATUS_204); // send ()
+        throw ServerException(STATUS_204);
     }
     else 
-        throw ServerException(STATUS_404); // send()
+        throw ServerException(STATUS_404);
 }

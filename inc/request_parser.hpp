@@ -50,6 +50,7 @@ class	URI
 		bool				headers_parsed;
 		size_t			headers_size;
 		bool				isChunked;
+		bool				isMultipart;
 		size_t			chunkSize;
 		bool				expect_continue;
 		mapStrVect	headers;
@@ -59,7 +60,6 @@ class	URI
 		string rawBody;
 		string uri;
 		string version;
-		string	contentType;
 		string	boundary;
 
 ///////////////////////////////////////////
@@ -87,6 +87,7 @@ class	URI
 		string			getFragment()const;
 		size_t			getHeadersSize()const;
 		bool				getIsChunked()const;
+		bool				getIsMultipart()const;
 		size_t			getChunkSize()const;
 		bool				getExpectContinue()const;
 		mapStrStr		getParams()const;
@@ -106,6 +107,7 @@ class	URI
 		void				setQuery(string qry);
 		void				setFragment(string fragm);
 		void				setHeadersSize(size_t size);
+		void				setIsMultipart(bool multi);
 		void				setIsChunked(bool chunked);
 		void				setChunkSize(size_t size);
 		void				setExpectContinue(bool expect);
@@ -120,7 +122,7 @@ class	URI
 
 		string	getContentType() const;
 		string	getBoundary() const;
-    	void    parseBoundary();
+		void		setBoundary(string bdr);
 
 ////////////////////////////////////////////////
 
@@ -160,6 +162,9 @@ bool	request_testing();
 //	../src/read_chunked.cpp
 void	transfer_encoding(URI &rq_uri);
 bool	read_chunked(int &client, URI &rq);
+
+//	../src/read_multipart.cpp
+bool	read_multipart(int &client, URI &rq);
 
 #endif
 

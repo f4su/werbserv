@@ -48,8 +48,8 @@ class Response
         void 		readBody(Route const & route);
         void 		processUrlEncodedBody(const string& body);
         void 		processMultipartFormDataBody(const string& body, Route const & route);
-        void 		processFileUpload(std::istringstream& ss, const string& line, Route const & route);
-        void 		processFormField(std::istringstream& ss, const string& line, std::map<string, string>& queryStrings);
+        void 		processFileUpload(std::istringstream& ss, const string& name);
+        void 		processFormField(std::istringstream& ss, const string& name, std::map<string, string>& queryStrings);
         std::string getResponse();
         void    setStatus(std::string codestr);
 };

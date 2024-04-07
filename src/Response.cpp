@@ -1,34 +1,35 @@
 #include "../inc/Response.hpp"
 #include "../inc/headers.hpp"
+#include "../inc/launch_servers.hpp"
 
 #define	CRLF			"\r\n"
+#define	CRLFx2				"\r\n\r\n"
 
-Response::Response(URI &rq)
-{
+Response::Response(URI &rq){
     mime = Mime();
     isListing = false;
     request = &rq;
     code = request->getStatusCode();
 }
 
-Response::~Response()
-{
+Response::~Response(){
 }
 
 
 
 
 
-void Response::handleResponse(Server &server, Route &route)
-{
+void Response::handleResponse(Server &server, Route &route){
     try
     {
-        if (route.getAllowListingSet() == true)
-			route.setAllowListing(route.getAllowListing());
-		else
-			route.setAllowListing(server.getAllowListing());
+    		if (route.getAllowListingSet() == true)
+					route.setAllowListing(route.getAllowListing());
+				else
+					route.setAllowListing(server.getAllowListing());
+
         std::cout << RED << "ROUTE IN HANDLEREPONSE P--------> " << route.getPath() << EOC << std::endl;
-		headers["Content-Type"] = "text/html";
+
+				headers["Content-Type"] = "text/html";
         if (request->getMethod() == 'g'){
             std::cout << RED << "IN GET "<< EOC << std::endl;
             handleGet(server, route);
@@ -38,13 +39,13 @@ void Response::handleResponse(Server &server, Route &route)
             handlePost(server, route);
         }
         else if (request->getMethod() == 'd'){ 
-            std::cout << RED << "IN POST "<< EOC << std::endl;
+            std::cout << RED << "IN DELETE"<< EOC << std::endl;
             handleDelete(server, route);
         }
         else {
             std::cout << RED << "IN EXCEPT"<< EOC << std::endl;
             //setStatus(STATUS_501);
-            throw ServerException(STATUS_501);			//TO DO: Todo lo que sean throws, convertirlos en send
+            throw ServerException(STATUS_501);			
 		}
     }
     catch (ServerException & e)
@@ -83,14 +84,14 @@ void Response::handleResponse(Server &server, Route &route)
 void Response::handleGet(Server &server, Route const & route)
 {
     //string filePath = getFilePath(server, route);
-    server.getAllowListing(); //compilar
 
     
-	string filePath;
+		string filePath;
     if (route.getAllowListing() == true)
         filePath = server.getRoot() + route.getPath();
     else
         filePath = request->getPath();
+	
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleGet(Server &server, Route const & route)" << EOC << std::endl;
     checkRedirection(route);
     std::cout << CYA << "ALLOW LISTING--->" << route.getAllowListing() << EOC << std::endl;
@@ -133,7 +134,6 @@ void Response::handlePost(Server &server, Route const & route)
         return; 
     }
     readBody(route);
-    //setStatus(STATUS_201);
     throw ServerException(STATUS_201);
 }
 
@@ -232,6 +232,8 @@ string Response::tryFiles(Server const & server, Route const & route, string & r
     throw ServerException(STATUS_404);
 }
 
+
+
 string Response::getFilePath(Server const & server, Route const & route)
 {
 
@@ -266,6 +268,7 @@ void Response::processUrlEncodedBody(const string& body)
     std::map<string, string> queryStrings;
     vector<string> params = ft_split(body, "&");
 
+    std::cout << RED << "DOING URL ENCODED--- " << EOC << std::endl;
     for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it)
     {
         vector<string> param = ft_split(*it, "=");
@@ -274,57 +277,100 @@ void Response::processUrlEncodedBody(const string& body)
     }
 }
 
-void Response::processFileUpload(std::istringstream& ss, const string& line, Route const & route)
+void Response::processFileUpload(std::istringstream& ss, const string& name)
 {
-    int len = line.find("\"", line.find("filename") + 10) - line.find("filename") - 10;
-    string filename = route.getUploadDir() + "/" + line.substr(line.find("filename") + 10, len);
-    std::ofstream file(filename.c_str());
+		std::cout << MAG << "UPLOAAAAAAAAAD {{{{{{{" << name << EOC << std::endl;
+    std::ofstream file(name.c_str());
+    if (!file.is_open()) {
+			std::cerr << RED << "Error uploading file!" << EOC << std::endl;
+        throw ServerException(STATUS_500);
+    }
     string content;
-    std::getline(ss, content);
-    std::getline(ss, content);
+    //std::getline(ss, content);
+    //std::getline(ss, content);
     while (std::getline(ss, content))
         file << content << "\n";
+
+		//Crete a file
+		file.close();
 }
 
-void Response::processFormField(std::istringstream& ss, const string& line, std::map<string, string>& queryStrings)
+void Response::processFormField(std::istringstream& ss, const string& name, std::map<string, string>& queryStrings)
 {
-    int len = line.find("\"", line.find("name") + 6) - line.find("name") - 6;
-    string name = line.substr(line.find("name") + 6, len);
+		std::cout << MAG << "Procesing FFFFFFFFFFFFFFFForm field" << EOC << std::endl;
     string content;
-    std::getline(ss, content);
-    std::getline(ss, content);
+    //std::getline(ss, content);
+    //std::getline(ss, content);
     std::getline(ss, content, '\0');
     queryStrings[name] = content;
+}
+
+string getFileName(string const &body, Route const &route, size_t length, string param, bool test)
+{
+		string name;
+    int len = body.find("\"", body.find(param) + length) - body.find(param) - length;
+		if (test == true)
+    	name = route.getUploadDir() + "/" + body.substr(body.find(param) + length, len);
+		else
+			name = body.substr(body.find(param) + length, len);
+		if (body.find(CRLF) == string::npos || name.size() == 0){
+			throw ServerException(STATUS_400);
+		}
+		return name;
 }
 
 void Response::processMultipartFormDataBody(const string& body, Route const & route)
 {
     std::map<string, string> queryStrings;
     string boundary = request->getBoundary();
-    vector<string> params = ft_split(body, "--" + boundary);
+    //vector<string> params = ft_split(body, "--" + boundary);
 
+    std::cout << RED << "doing multipart--- with boundary[" << boundary << "]" << EOC << std::endl;
+		/*
     for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it)
     {
         std::istringstream ss(*it);
         string line;
         std::getline(ss, line);
+*/
+		string bod = body;
+		std::cout << RED << "--- Body in multipart isssss[" << displayHiddenChars(bod) << "]" << EOC << std::endl;
+		if (body.find(CRLFx2) == string::npos){
+			std::cout << RED << "Error: multipart CRLFx2 not found" << EOC << std::endl;
+			throw ServerException(STATUS_400);
+		}
+		string	contentBody = body.substr(body.find(CRLFx2) + 4);
+		std::cout << RED << "--- ContentBody in multipart isssss[" << displayHiddenChars(contentBody) << "]" << EOC << std::endl;
+		std::istringstream ss(contentBody);
+		if (body.find("filename") != string::npos){
+				processFileUpload(ss, getFileName(body, route, 10, "filename", true));
+		}
+		else if (body.find("name") != string::npos){
+				processFormField(ss, getFileName(body, route, 6, "name", false), queryStrings);
+		}
 
-        if (line.find("filename") != string::npos)
-            processFileUpload(ss, line, route);
-        else if (line.find("name") != string::npos)
-            processFormField(ss, line, queryStrings);
-    }
+   // }
 }
 
 void Response::readBody(Route const & route)
-{
-    const string& contentType = request->getContentType();
+{	
+		if (request->getHeaders().find(CONTENT_TYPE_H) == (request->getHeaders().end())){
+    	std::cout << RED << "Error: Content-Type header not found when reading body" << EOC << std::endl;
+    	throw ServerException(STATUS_400);
+		}
+
+		mapStrVect		headers = request->getHeaders();
+		const vecStr	&contentType = headers[CONTENT_TYPE_H];
+
     const string& body = request->getBody();
     
-    if (contentType == "application/x-www-form-urlencoded")
-        processUrlEncodedBody(body);
-    else if (contentType == "multipart/form-data")
+    std::cout << RED << "Content Type is->[" << contentType[0] << "]" << EOC << std::endl;
+    if (contentType[0] == "application/x-www-form-urlencoded")
+        processUrlEncodedBody(body);		//Mirar cuándo ocurre estoo
+    else if (contentType[0] == "multipart/form-data")
         processMultipartFormDataBody(body, route);
+
+		//Un caso para el else y mirar en el curl qué pasa
 }
 
 

@@ -31,6 +31,7 @@ FILE =	main										\
 		read_chunked								\
 		Mime												\
 		responding									\
+		multipart										\
 #		request_parser_tester				\
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(FILE)))

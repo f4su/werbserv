@@ -38,6 +38,7 @@ private:
     mapIntUri				client_uri;
     mapIntStr       errorPages;
     vector<Route>   routes;
+		
 
 public:
     Server();

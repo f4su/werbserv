@@ -101,6 +101,11 @@ bool	check_headers_values(URI &rq, Server &server){
 		values = hdrs[it->first];
 		key = it->first;
 		if (valid_hdrs.find(it->first) == string::npos) continue ;
+		cout << MAG << "key~~~~~~~~~~" << key << EOC << std::endl;
+		if (key == CONTENT_TYPE_H){
+			cout << MAG << "val~~~~~~~~~~" <<  hdrs[CONTENT_TYPE_H][0]  << EOC << std::endl;
+		}
+
 		if (key == TRANSFER_ENCODING_H){
 				if (find(values.begin(), values.end(), "chunked") != values.end()){
 					rq.setIsChunked(true);
@@ -140,6 +145,9 @@ bool	check_headers_values(URI &rq, Server &server){
 					rq.setHost(values[0]);
 				}
 			}
+
+
+
 			cout << "HOOOOSTIEEEE->" << rq.getHost() << "]" << std::endl;
 			if (values.size() != 1 || ( rq.getHost() != "127.0.0.1" &&
 						find(hosts.begin(), hosts.end(), rq.getHost()) == hosts.end())){
@@ -149,6 +157,18 @@ bool	check_headers_values(URI &rq, Server &server){
 			}
 			hostHdr = true;
 		}
+
+		else if (key == CONTENT_TYPE_H && hdrs[CONTENT_TYPE_H][0] == "multipart/form-data"){
+			cout << CYA << "Setting Boooooooooooooooooooooooooooundary" << EOC << std::endl;
+			if ( hdrs[CONTENT_TYPE_H].size() == 1 || hdrs[CONTENT_TYPE_H][1].find("=") ==  string::npos){
+				rq.setStatusCode(STATUS_400);
+				return (true);
+			}
+			cout << CYA << "Setting Boooooooooooooooooooooooooooundary2222" << EOC << std::endl;
+			rq.setBoundary(hdrs[CONTENT_TYPE_H][1].substr( hdrs[CONTENT_TYPE_H][1].find("=") + 1));
+			rq.setIsMultipart(true);
+		}
+
 	}
 	if (hostHdr == false){
 		rq.setStatusCode(STATUS_400);
@@ -169,6 +189,7 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 	vector<vector<string> >::iterator		it;
 	string															key;
 
+	cout << RED << "Starting Headers Parse" << EOC << std::endl; 
 	for (it = tokens.begin(); it != tokens.end() && index++ <= rq.getHeadersSize(); ++it){
 		if (it == tokens.begin() || it->size() < 1){
 			continue ;
@@ -214,8 +235,9 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 				for (size_t word = 1; word < line.size(); ++word){
 					cout << CYA << "[" << line[word] << "]" << EOC << std::endl; 
 					if (((word == line.size() -1) && (line[word].back() == ',')) ||
-							((word < line.size() - 1) && (line[word].back() != ',' || line[word].size() <= 1))){
+							((word < line.size() - 1) && ((line[word].back() != ',' && line[word].back() != ';') || line[word].size() <= 1))){
 						cout << RED << "Error on case 4" << EOC << std::endl; 
+						rq.setStatusCode(STATUS_400);
 						return (true);
 					}
 					if (word < line.size() - 1){
@@ -231,6 +253,21 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 			values.clear();
 			key.clear();
 	}
+
+
+	cout << CYA << "\n\n\n*********HEADERS*************" << EOC << std::endl << std::endl;
+	for (mapStrVect::iterator	it = hdrs.begin(); it != hdrs.end(); ++it){
+	
+		cout << CYA << "Key->[" << it->first << "]" << EOC << std::endl << std::endl;
+
+		cout << CYA << "Vals->[" ;
+		for (vector<string>::iterator jt = it->second.begin(); jt != it->second.end(); ++jt){
+			cout << *jt << " , ";
+		}
+		cout << "]" << EOC << std::endl << std::endl;
+	}	
+	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;
+
 	if (hdrs.size() == 0){
 		cout << RED << "Error when storing the headers" << EOC << std::endl; 
 		rq.setStatusCode(STATUS_500);

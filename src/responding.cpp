@@ -35,80 +35,98 @@ bool	responding_when_error(int &client, Server &server, URI &rq){
 	return (false);
 }
 
+void	changePath(Server &server, URI &rq, Route &route){
+	//Redirect
+	if (route.getRedirect().size()){
+		rq.setPath(route.getRedirect());	//Setear status code a 301??
+	}
+	//Root
+	else if (route.getRoot().size()){
+		cerr << RED << "SUBSSSSSSSSSTR ->" << rq.getPath().substr(route.getPath().size()) << EOC << std::endl;
+		rq.setPath(route.getRoot() + rq.getPath().substr(route.getPath().size()));
+	}
+	else if (server.getRoot().size()){
+		cerr << RED << "SUBSSSSSSSSSTR ->" << rq.getPath().substr(route.getPath().size()) << EOC << std::endl;
+		rq.setPath(server.getRoot() + rq.getPath().substr(route.getPath().size()));
+	}
+	//Index
+	if (route.getIndex().size()){
+		rq.setPath(rq.getPath() + route.getIndex()[0]);
+	}
+	else{
+		if (server.getIndex().size()){
+			rq.setPath( rq.getPath() + server.getIndex()[0]);
+		}
+	}
+}
+
 int resolveRedirIndex(Server &server, URI &rq)
 {
 	vector<Route>		routes = server.getRoutes();
 	size_t				ind = 0;
+	size_t				longestPrefix	= 0;
 	int					pathMatch = -1;
-
-	//Redirect??
 
 	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	cout << MAG << "Path antess de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
-		if (it->getPath() == rq.getPath()){
+		if (rq.getPath().find(it->getPath()) == 0){
 			cout << MAG << "it->Path is->[" << it->getPath() << "]" << EOC << std::endl;
-			pathMatch = ind;
-			//Redirect
-			if (it->getRedirect().size()){
-				rq.setPath(it->getRedirect());	//Setear status code a 301??
-			}
 
-			//Root
-			else if (it->getRoot().size()){
-				rq.setPath(it->getRoot() + rq.getPath());
+			if (it->getPath().size() > longestPrefix){
+				pathMatch = ind;
+				longestPrefix = it->getPath().size();
 			}
-			else if (server.getRoot().size()){
-				rq.setPath(server.getRoot() + rq.getPath());
-			}
-/* 			cout << MAG << "ALLOW LISTING IS-->" << it->getAllowListing() << "]" << EOC << std::endl;
-			//AllowListing
-			if (it->getAllowListingSet() == false){
-				cout << MAG << "SETTING PAPA-->" << server.getAllowListing() << "]" << EOC << std::endl;
-				it->setAllowListing(server.getAllowListing());
-			} */
-
-			//Index
-			if (it->getIndex().size()){
-				rq.setPath(rq.getPath() + it->getIndex()[0]);
-			}
-			else{
-				if (server.getIndex().size()){
-					rq.setPath( rq.getPath() + server.getIndex()[0]);
-				}
-			}
-			return (pathMatch);
 		}
 		++ind;
 	}
-
 	if (pathMatch == -1){
 		rq.setStatusCode(STATUS_404);
+		return (pathMatch);
 	}
+	changePath(server, rq, routes[pathMatch]);
 	cout << MAG << "Path después de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
 	return (pathMatch);
 
 }
 
 void respond_connection(int &client, Server &server, URI &rq){
+
+	cout << MAG << "Headers Size[" << rq.getHeaders().size() << "]" << EOC << std::endl;
 	check_body_size(server, rq);
 	size_t	routeInd;
 	if (rq.getStatusCode().size() == 0){
 		routeInd = resolveRedirIndex(server, rq);
 	}
-	if (responding_when_error(client, server, rq) && rq.getPath() != "/make"){
+	if (responding_when_error(client, server, rq)){
 		return ;
 	}
-	/* if (rq.getPath() == "/"){
-		rq.setPath(rq.getPath() + server.getRoot() + "/" + server.getIndex()[0]);
-		std::cerr << MAG << "PATHHhHHHHHHHHHHHHHHHHH--->" << rq.getPath() << EOC << std:endl;
-	} */
 
-	rq.setStatusCode(STATUS_200);
-	cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 	Response	response(rq);
+	rq.setStatusCode(STATUS_200);
 
-	response.handleResponse(server, server.getRoutes()[routeInd]);
+/*
+	if (rq.getPath() == "/"){
+		rq.setPath(rq.getPath() + server.getRoot() + "/" + server.getIndex()[0]);
+		Route	serverRoute;
+		serverRoute.setPath("/");
+		serverRoute.setRoot(server.getRoot());
+		serverRoute.setIndex(server.getIndex());
+		serverRoute.setAllowListing(server.getAllowListing());
+		serverRoute.setErrorPages(server.getErrorPages());
+		vector<string>	mths;
+		//mths.push_back("GET");
+
+		std::cerr << MAG << "PATHHhHHHHHHHHHHHHHHHHH--->" << rq.getPath() << EOC << std::endl;
+		response.handleResponse(server, serverRoute);
+	} 
+	else{
+		*/
+		cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
+		response.handleResponse(server, server.getRoutes()[routeInd]);
+//	}
+
+
 	std::string res = response.getResponse();
 	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 
@@ -216,12 +234,35 @@ void check_body_size(Server &server, URI &rq){
 	size_t			bodySize			= rq.getBody().size();
 	size_t			max 					= server.getClientMaxBodySize();
 	size_t			contentLength	=	0;
+	bool				multipart_h		= false;
 	bool				length_h			= false;
 	mapStrVect	hdrs					= rq.getHeaders();
+
+
+	/*
+	cout << CYA << "\n\n\n*********HEADERS*************" << EOC << std::endl << std::endl;
+	for (mapStrVect::iterator	it = hdrs.begin(); it != hdrs.end(); ++it){
+	
+		cout << CYA << "Key->[" << it->first << "]" << EOC << std::endl << std::endl;
+
+		cout << CYA << "Vals->[" ;
+		for (vector<string>::iterator jt = it->second.begin(); jt != it->second.end(); ++jt){
+			cout << *jt << " , ";
+		}
+		cout << "]" << EOC << std::endl << std::endl;
+	}	
+	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;
+	*/
 
 	if (rq.getStatusCode().size()){
 		return ;
 	}
+
+	
+	if (hdrs.find(CONTENT_TYPE_H) != hdrs.end() && hdrs[CONTENT_TYPE_H][0] == "multipart/form-data"){
+		multipart_h = true;
+	}
+
 	if (hdrs.find(CONTENT_LENGTH_H) != hdrs.end()){
 		length_h = true;
 		string val = (hdrs[CONTENT_LENGTH_H])[0];
@@ -239,7 +280,7 @@ void check_body_size(Server &server, URI &rq){
 			rq.setStatusCode(STATUS_413);
 			cout << RED << "Error: Body too long (413 Entity too long)" << EOC << std::endl; 
 		}
-		else if (length_h == true && contentLength != bodySize){
+		else if (length_h == true && multipart_h == false && contentLength != bodySize){
 			rq.setStatusCode(STATUS_400);
 			cout << RED << "Error: Content-Length  mismatches body size (400)" << EOC << std::endl; 
 		}

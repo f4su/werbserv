@@ -3,9 +3,7 @@
 URI::URI() : request(""), body(""), statusCode(""),
 	goingToResponse(false), closeConnection(false),
 	method('u'), scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
-	headers_parsed(false), headers_size(0), isChunked(false), chunkSize(0), expect_continue(false){
-
-    parseBoundary();
+	headers_parsed(false), headers_size(0), isChunked(false), isMultipart(false), chunkSize(0), expect_continue(false){
 }
 
 
@@ -13,7 +11,7 @@ URI::URI(URI const &copy) :
 	request(copy.request), body(copy.body),
 	goingToResponse(copy.goingToResponse), closeConnection(copy.closeConnection),
 	method(copy.method), scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path), query(copy.query), fragment(copy.fragment), params(copy.params),
-	headers_parsed(copy.headers_parsed), headers_size(copy.headers_size), isChunked(copy.isChunked), chunkSize(copy.chunkSize), expect_continue(copy.expect_continue){
+	headers_parsed(copy.headers_parsed), headers_size(copy.headers_size), isChunked(copy.isChunked), isMultipart(copy.isMultipart), chunkSize(copy.chunkSize), expect_continue(copy.expect_continue){
 
 	for (mapStrVect::const_iterator it = copy.headers.begin(); it != copy.headers.end(); ++it) {
 		vector<string> vecCopy(it->second.begin(), it->second.end());
@@ -76,6 +74,10 @@ std::string	URI::getQuery()const{
 
 bool	URI::getIsChunked()const{
 	return (isChunked);
+}
+
+bool	URI::getIsMultipart()const{
+	return (isMultipart);
 }
 
 size_t	URI::getChunkSize()const{
@@ -160,6 +162,10 @@ void	URI::setIsChunked(bool chunked){
 	this->isChunked = chunked;
 }
 
+void	URI::setIsMultipart(bool multi){
+	this->isMultipart = multi;
+}
+
 void	URI::setChunkSize(size_t size){
 	this->chunkSize = size;
 }
@@ -188,6 +194,9 @@ void	URI::setStatusCode(string status){
 	this->statusCode = status;
 }
 
+void		URI::setBoundary(string bdr){
+	this->boundary = bdr;
+}
 //Overloads
 URI	&	URI::operator=(const URI &rhs){
 	this->request = rhs.getRequest();
@@ -203,6 +212,7 @@ URI	&	URI::operator=(const URI &rhs){
 	this->query = rhs.getQuery();
 	this->headers_size = rhs.getHeadersSize();
 	this->isChunked = rhs.getIsChunked();
+	this->isMultipart = rhs.getIsMultipart();
 	this->chunkSize = rhs.getChunkSize();
 	this->expect_continue = rhs.getExpectContinue();
 	this->params = rhs.getParams();
