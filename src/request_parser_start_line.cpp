@@ -169,6 +169,12 @@ bool	invalid_method_in_route(URI &rq, Server &server){
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
 		route_mths = it->getMethods();
 		if (it->getPath() == rq.getPath()){
+			cout << CYA << "Routeeee path [" << it->getPath() << "] with method " << method << EOC << std::endl;
+			cout << CYA << "Methods in route [";
+			for (vector<string>::iterator loop = route_mths.begin(); loop != route_mths.end(); ++loop){
+				cout << *loop << " , ";
+			}
+			cout << "]" << EOC << std::endl;
 			if (route_mths.size() == 0 && method.size())
 				return false;
 			if (std::find(route_mths.begin(), route_mths.end(), method) == route_mths.end()){

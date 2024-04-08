@@ -4,44 +4,77 @@
     server_names = localhost
     client_max_body_size = 100000000000000
     error_pages = 404:www/error_pages/404.html 500:www/error_pages/500.html
-    root = www
     allow_listing = true
     index = /index.html
 
+
+
     <route path="/">
-    		root = www
-    		index = /index.html
+    		root = .
+    		index = /www/index.html
+    		allow_listing = false
+    </route>	
+	
+
+
+
+
+
+
+    <route path="/list">
+    		root = .
+    </route>
+
+    <route path="/listErrorPages">
+    		root = www/error_pages
+    		allow_listing = true
+    </route>
+
+
+
+
+    <route path="/redirect">
+        redirect = /redirected
+    </route>
+	
+    <route path="/redirected">
+        root = redir
+				index = /redirected.html
+    		allow_listing = false
+    </route>
+
+
+
+
+    <route path="/kapouet">
+        root = tmp/www
     		allow_listing = false
     </route>
 	
-    <route path="/testing">
-        redirect = /test
-    </route>
-	
-    <route path="/test">
-        index = /test.html
-        allow_listing = true
-    </route>
-	
-    <route path="/kapouet">
-        root = www/error_pages
-        redirect = /error_pages
-    </route>
-	
-    <route path="/error_pages">
-    </route>
-	
-    <route path="/cgi_scripts">
-        root = www/cgi_scripts
-        methods = GET, POST, DELETE
-        cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
+
+
+    <route path="/curlPostOnly">
+        root = www/uploads/uploaded
+        methods = POST
+    		allow_listing = false
     </route>
 
-    <route path="/method">
-        methods = POST
+    <route path="/getOnly">
+        root = www/uploads/uploaded
+        methods = GET
+    		allow_listing = false
     </route>
 	
-    <route path="/uploads">
+    <route path="/curlDeleteOnly">
+        root = www/uploads/uploaded
+        methods = DELETE
+    		allow_listing = false
+    </route>
+
+
+
+
+    <route path="/browserPost">
         root = www/uploads
         methods = POST, GET
         upload_dir = www/uploads/uploaded
@@ -49,19 +82,22 @@
     		allow_listing = false
     </route>
 	
-    <route path="/post">
+
+
+
+    <route path="/cgi_scripts">
+        root = www/cgi_scripts
+        methods = GET, POST, DELETE
+        cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
+    </route>
+
+    <route path="/postCgi">
         root = www/cgi-scripts
         methods = POST
         index = /F_Post.php
         cgi = .php:cgi-bin/php-cgi
     		allow_listing = false
     </route>
-
-    <route path="/delete">
-        methods = DELETE
-        root = www/uploads/uploads
-    </route>
-
 
 </server>
 

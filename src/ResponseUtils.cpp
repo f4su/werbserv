@@ -1,77 +1,13 @@
 #include "../inc/Response.hpp"
 
-Route Response::findBestMatchInRoute(Route & route, string const & resource)
+bool CheckInDirectory(string &path)
 {
-    if (CheckInDirectory(resource))
-    {
-        std::cerr << MAG << "-----PATH IS A DIRECTORY-----" << EOC << std::endl;
-        if (resource.back() != '/') {
-            if (request->getMethod() == 'd')
-            {
-                //setStatus(STATUS_409);
-                throw ServerException(STATUS_409);
-            }
-            else
-            {
-                headers["Location"] = route.getPath() + resource + "/";
-                //setStatus(STATUS_307);
-                throw ServerException(STATUS_307);
-            }
-        }
-        Route newRoute(resource, route.getPath() + resource, Route::DIRECTORY);
-        newRoute.setAllowListing(route.getAllowListing());
-        return (newRoute);
-    }
-    else if (CheckIfInFile(resource))
-    {
-        Route newRoute(route);
-        newRoute.setPath(resource);
-        newRoute.setRouteType(Route::FILE);
-        return (newRoute);
-    }
-		std::cout << RED << "PACOOOO" << EOC << std::endl;
-    //setStatus(STATUS_404);
-    throw ServerException(STATUS_404);
-}
-
-Route Response::findBestMatchInServer(Server & server, string const & resource)
-{ 
-    std::cout << RED << "FIND BEST MATCH: root:" << server.getRoot() << " resource:" << resource << EOC << std::endl;
-    
-    if (CheckInDirectory(resource))
-    {
-        std::cerr << MAG << "-----PATH IS A DIRECTORY-----" << EOC << std::endl;
-        if (resource.back() != '/')
-        {
-            if (request->getMethod() == 'd')
-            {
-                //setStatus(STATUS_409);
-                throw ServerException(STATUS_409);
-            }
-            else
-            {
-                headers["Location"] = resource;
-                //setStatus(STATUS_307);
-                throw ServerException(STATUS_307);
-            }
-        }
-        Route newRoute(resource, resource, Route::DIRECTORY);
-        newRoute.setAllowListing(server.getAllowListing());
-    	std::cout << RED << "Returning Route: root->" << newRoute.getRoot() << " path->" << newRoute.getPath() << EOC << std::endl;
-        return (newRoute);
-    }
-    else if (CheckIfInFile(resource))
-        return (Route(server.getRoot(), resource, Route::FILE));
-    //setStatus(STATUS_404);
-    throw ServerException(STATUS_404);
-}
-
-bool CheckInDirectory(string path)
-{
-    if (path.size() && path.front() != '/')
-        path = getCurrentDirectory() + "/" + path;
-    else if (path.size() )
-        path = getCurrentDirectory() + path;
+    if (path.size() == 1 && path[0] == '.')
+        path = path + "/";
+		else if (path.size() && path[0] == '/')
+        path = "." + path;
+		else if (path.size() && path[0] != '/' && path[0] != '.')
+        path = "./" + path;
 
     std::cerr << MAG << "QUE PATH ES ESTE -----------> " << path << EOC << std::endl;
     DIR* dir = opendir(path.c_str());

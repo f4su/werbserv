@@ -93,6 +93,9 @@ std::map<std::string, std::string> Cgi::getResponseHeaders()
 
 std::string Cgi::getFileExt(std::string const &path)
 {
+	if (path.find_last_of(".") == std::string::npos){
+		return (".txt");
+	}
   std::string ext = path.substr(path.find_last_of("."));
 	return (ext);
 }

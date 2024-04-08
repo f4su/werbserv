@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include "ServerException.hpp"
 #include <sys/stat.h>
+#include  "Route.hpp"
 
 template <typename Container>
 void printContainer(const Container& c)
@@ -45,7 +46,7 @@ std::vector<std::string>		ft_split_by_string(const std::string &s, const std::st
 bool                        mapErrorPages(std::map<int, std::string> & errorPages, std::string const & value);
 bool                        mapCgi(std::map<std::string, std::string> & cgi, std::string const & value);
 void                        trimTrailingSlashes(std::string & s);
-std::vector<std::string>    getFilesInDirectory(std::string const & reqPath);
+std::vector<std::string>    getFilesInDirectory(std::string & reqPath);
 void                        removeConsecutiveChars(std::string & s, char c);
 std::string                 generateHtmlListing(const std::vector<std::string>& files);
 void                        removeFileOrDirectory(std::string path);

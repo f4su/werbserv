@@ -255,7 +255,7 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 	}
 
 
-	cout << CYA << "\n\n\n*********HEADERS*************" << EOC << std::endl << std::endl;
+	/*cout << CYA << "\n\n\n*********HEADERS*************" << EOC << std::endl << std::endl;
 	for (mapStrVect::iterator	it = hdrs.begin(); it != hdrs.end(); ++it){
 	
 		cout << CYA << "Key->[" << it->first << "]" << EOC << std::endl << std::endl;
@@ -266,7 +266,7 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 		}
 		cout << "]" << EOC << std::endl << std::endl;
 	}	
-	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;
+	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;*/
 
 	if (hdrs.size() == 0){
 		cout << RED << "Error when storing the headers" << EOC << std::endl; 

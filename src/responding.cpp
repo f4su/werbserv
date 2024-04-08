@@ -35,28 +35,54 @@ bool	responding_when_error(int &client, Server &server, URI &rq){
 	return (false);
 }
 
-void	changePath(Server &server, URI &rq, Route &route){
+void	changePath(Server &server, URI &rq, Route &route, bool fullMatch){
+	string	newPath, root, sub = rq.getPath().substr(route.getPath().size());
+
+	if (route.getAllowListingSet() == true)
+		route.setAllowListing(route.getAllowListing());
+	else
+		route.setAllowListing(server.getAllowListing());
+	cerr << RED << "Change Path Allow Listing is ->" << route.getAllowListing() << EOC << std::endl;
+
 	//Redirect
 	if (route.getRedirect().size()){
 		rq.setPath(route.getRedirect());	//Setear status code a 301??
 	}
+
 	//Root
 	else if (route.getRoot().size()){
-		cerr << RED << "SUBSSSSSSSSSTR ->" << rq.getPath().substr(route.getPath().size()) << EOC << std::endl;
-		rq.setPath(route.getRoot() + rq.getPath().substr(route.getPath().size()));
+		cerr << RED << "SUBSSSSSSSSSTR ->" << sub << EOC << std::endl;
+		root = route.getRoot();
+		if (root.at(root.size()-1) != '/' && sub.size() && sub.at(0) != '/')
+			newPath = (root + "/" + sub);
+		else {
+			newPath = (root + sub);
+		}
+		removeConsecutiveChars(newPath, '/');
+		rq.setPath(newPath);
 	}
 	else if (server.getRoot().size()){
-		cerr << RED << "SUBSSSSSSSSSTR ->" << rq.getPath().substr(route.getPath().size()) << EOC << std::endl;
-		rq.setPath(server.getRoot() + rq.getPath().substr(route.getPath().size()));
-	}
-	//Index
-	if (route.getIndex().size()){
-		rq.setPath(rq.getPath() + route.getIndex()[0]);
-	}
-	else{
-		if (server.getIndex().size()){
-			rq.setPath( rq.getPath() + server.getIndex()[0]);
+		cerr << RED << "SUBSSSSSSSSSTR ->" << sub << EOC << std::endl;
+		root = server.getRoot();
+		if (root.at(root.size()-1) != '/' && sub.size() && sub.at(0) != '/')
+			newPath = (root + "/" + sub);
+		else {
+			newPath = (root + sub);
 		}
+		removeConsecutiveChars(newPath, '/');
+		rq.setPath(newPath);
+	}
+
+	//Index
+	if (route.getIndex().size() && fullMatch && route.getAllowListing() == false){
+		newPath = rq.getPath() + route.getIndex()[0];
+		removeConsecutiveChars(newPath, '/');
+		rq.setPath( newPath );
+	}
+	else if (server.getIndex().size() && fullMatch && route.getAllowListing() == false){
+		newPath = rq.getPath() + server.getIndex()[0];
+		removeConsecutiveChars(newPath, '/');
+		rq.setPath( newPath );
 	}
 }
 
@@ -84,7 +110,8 @@ int resolveRedirIndex(Server &server, URI &rq)
 		rq.setStatusCode(STATUS_404);
 		return (pathMatch);
 	}
-	changePath(server, rq, routes[pathMatch]);
+	changePath(server, rq, server.getRoutes()[pathMatch], longestPrefix == rq.getPath().size() ? true : false);
+	cout << MAG << "Fuera de ChangePath Allow->" << server.getRoutes()[pathMatch].getAllowListing() << "]" << EOC << std::endl;
 	cout << MAG << "Path después de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
 	return (pathMatch);
 
@@ -130,7 +157,7 @@ void respond_connection(int &client, Server &server, URI &rq){
 	std::string res = response.getResponse();
 	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 
-	cerr << CYA << "\nRESPONSE>:\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
+	//cerr << CYA << "\nRESPONSE>:\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
 
 	if ( send(client, res.c_str(), res.size(), 0) == -1){
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;

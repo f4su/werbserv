@@ -22,11 +22,11 @@ Response::~Response(){
 void Response::handleResponse(Server &server, Route &route){
     try
     {
-    		if (route.getAllowListingSet() == true)
+
+				if (route.getAllowListingSet() == true)
 					route.setAllowListing(route.getAllowListing());
 				else
 					route.setAllowListing(server.getAllowListing());
-
         std::cout << RED << "ROUTE IN HANDLEREPONSE P--------> " << route.getPath() << EOC << std::endl;
 
 				headers["Content-Type"] = "text/html";
@@ -84,13 +84,10 @@ void Response::handleResponse(Server &server, Route &route){
 void Response::handleGet(Server &server, Route const & route)
 {
     //string filePath = getFilePath(server, route);
+		server.getRoot(); //Compile
 
     
-		string filePath;
-    if (route.getAllowListing() == true)
-        filePath = server.getRoot() + route.getPath();
-    else
-        filePath = request->getPath();
+		string filePath = request->getPath();
 	
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleGet(Server &server, Route const & route)" << EOC << std::endl;
     checkRedirection(route);
@@ -122,9 +119,10 @@ void Response::handleGet(Server &server, Route const & route)
 
 void Response::handlePost(Server &server, Route const & route)
 {
+		server.getRoot(); //compile
     if (!route.getCgi().empty())
     {
-        string filePath = getFilePath(server, route);
+        string filePath = request->getPath(); //getFilePath(server, route);
          std::cout << CYA << "FILEPATH IS : " << filePath << " <---handlePost(Server &server, Route const & route)" << EOC << std::endl;
         removeConsecutiveChars(filePath, '/');
         Cgi cgi(route, filePath, *request);
@@ -139,9 +137,10 @@ void Response::handlePost(Server &server, Route const & route)
 
 void Response::handleDelete(Server &server, Route const & route)
 {
-    string filePath = getFilePath(server, route);
+		server.getRoot(); //for compile
+    string filePath = request->getPath(); //getFilePath(server, route);
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleDelete(Server &server, Route const & route)" << EOC << std::endl;
-    removeConsecutiveChars(filePath, '/');
+    //removeConsecutiveChars(filePath, '/');
     if (!route.getCgi().empty())
     {
         Cgi cgi(route, filePath, *request);
@@ -177,12 +176,19 @@ void Response::handleDelete(Server &server, Route const & route)
 
 void Response::readContent(string const &filePath, string code)
 {
+		if (filePath.size() && filePath.at(filePath.size() -1) == '/'){
+    	code = code == STATUS_200 ? STATUS_404 : code;
+    	body = "<!DOCTYPE html><html><h1 align='center'>" + code + "</h1></html>";
+			return ;
+		}
     std::ifstream file(filePath);
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(string const &filePath, string code)" << EOC << std::endl;
 
-    if (file.is_open())
+		if (file.is_open())
     {
+    		std::cout << CYA << "FILE OPENED!!!!!!!!" << EOC << std::endl;
         headers["Content-Type"] = mime[Cgi::getFileExt(filePath)];
+    		std::cout << CYA << "Content TYpe is->" << headers["Content-Type"] << EOC << std::endl;
 				std::stringstream buffer;
         string line;
         while (std::getline(file, line))
@@ -225,40 +231,9 @@ string Response::tryFiles(Server const & server, Route const & route, string & r
     std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, string & root)" << EOC << std::endl;
     if (route.getRouteType() != Route::FILE)
     {
-        //setStatus(STATUS_403);
         throw ServerException(STATUS_403);
     }
-    //setStatus(STATUS_404);
     throw ServerException(STATUS_404);
-}
-
-
-
-string Response::getFilePath(Server const & server, Route const & route)
-{
-
-    std::cout << RED << "GETTING FILE PATH--- " << EOC << std::endl;
-    if (route.getRouteType() == Route::FILE)
-    	std::cout << RED << "FILE PATH -- IS FILE" << EOC << std::endl;
-      return route.getRoot() + "/" + route.getPath();
-    try
-    {
-        string root, index;
-        root = route.getRoot().empty() ? server.getRoot() : route.getRoot();
-        index = tryFiles(server, route, root);
-        return root + "/" + index;
-    } catch (ServerException & e)
-    {				//Revisar este status también
-        if (request->getStatusCode() == STATUS_403 && (route.getAllowListing() || server.getAllowListing())  \
-            && request->getMethod() != 'p')
-        {
-            if (request->getMethod() == 'd')
-                return route.getRoot() + "/";
-            vector<string> files = getFilesInDirectory(request->getPath());
-            return (isListing = true, body = generateHtmlListing(files), "");
-        }
-        throw ServerException(request->getStatusCode());
-    }
 }
 
 
@@ -399,34 +374,3 @@ string Response::getResponse()
 
     return (ss.str());
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*     catch (std::exception & e)
-    {
-        std::cout << CYA << "///////////////////////CODE IS 2 : " << code << EOC << std::endl;
-        code = STATUS_500;
-        std::cout << CYA << "///////////////////////CODE IS 2 : " << code << EOC << std::endl;
-        int c = 500;
-        std::cout << CYA << "///////////////////////FILEPATH IS 2 : " << server.getErrorPages()[c] << EOC << std::endl;
-        readContent(server.getErrorPages()[c], code);
-    } */

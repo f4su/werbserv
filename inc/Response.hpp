@@ -31,9 +31,9 @@ class Response
 
 				//Getters & Setter
         Server 	getServer();
-        Route		findBestMatchInRoute(Route & route, string const & resource);
-        Route		findBestMatchInServer(Server & server, string const & resource);
-        string	getFilePath(Server const & server, Route const & route);
+        //Route		findBestMatchInRoute(Route & route, string const & resource);
+        //Route		findBestMatchInServer(Server & server, string const & resource);
+        //string	getFilePath(Server const & server, Route const & route);
         string	tryFiles(Server const & server, Route const & route, string & root);
 
         void		readContent(string const &filePath, string code);
@@ -58,5 +58,5 @@ void 											removeConsecutiveChars(string & s, char c);
 std::pair<string, bool>   getMatchedPath(string serverRootPath, string path);
 bool 											CheckIfInDirectory(string path);
 bool 											CheckIfInFile(string path);
-bool                      CheckInDirectory(string path);
+bool                      CheckInDirectory(string &path);
 std::string               getCurrentDirectory();

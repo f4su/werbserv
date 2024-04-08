@@ -89,7 +89,7 @@ void trimTrailingSlashes(std::string & s)
 
 
 
-std::vector<std::string> getFilesInDirectory(std::string const & reqPath)
+std::vector<std::string> getFilesInDirectory(std::string & reqPath)
 {
     std::vector<std::string> files;
     std::cerr << MAG << "FILEPATH IS--->" << reqPath << EOC << std::endl;
@@ -117,7 +117,7 @@ std::vector<std::string> getFilesInDirectory(std::string const & reqPath)
 std::string generateHtmlListing(const std::vector<std::string>& files)
 {
 
-    std::string html;
+    std::string html, fileName;
     html += "<!DOCTYPE html>\n<html>\n<head>\n<title>Directory Listing</title>\n</head>\n<body>\n";
     html += "<h1 style='padding-left:20px'>Directory Listing</h1>\n";
     html += "<ul>\n";
