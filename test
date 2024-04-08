@@ -3,7 +3,6 @@
     port = 8080
     server_names = localhost
     client_max_body_size = 100000000000000
-    error_pages = 404:www/error_pages/404.html 500:www/error_pages/500.html
     allow_listing = true
     index = /index.html
 
@@ -13,6 +12,7 @@
     		root = .
     		index = /www/index.html
     		allow_listing = false
+    		error_pages = 404:www/error_pages/404.html 500:www/error_pages/500.html
     </route>	
 	
 
@@ -59,7 +59,8 @@
 
 
     <route path="/curlPostOnly">
-        root = www/uploads/uploaded
+        root = www/uploads
+        upload_dir = www/uploads/uploaded
         methods = POST
     		allow_listing = false
     </route>
@@ -99,7 +100,7 @@
     
     <route path="/postCgi">
         root = www/cgi_scripts
-        methods = POST, GET
+        methods = POST, GET, DELETE
         index = /F_Post.php
         cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
     		allow_listing = false

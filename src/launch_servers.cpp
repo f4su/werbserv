@@ -122,6 +122,7 @@ void read_connection(int &client, Server &server, URI &rq){
 	char request[MAXLINE];
 	ssize_t	readed;
 
+
 	if (server.getClientUri().at(client).getIsChunked() == false &&
 		server.getClientUri().at(client).getIsMultipart() == false){
 		memset(request, 0, MAXLINE);

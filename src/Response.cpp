@@ -77,7 +77,7 @@ void Response::handleGet(Server &server, Route const & route)
     //string filePath = getFilePath(server, route);
 		server.getRoot(); //Compile
 
-    
+    std::cout << MAG << "IN GET" << EOC << std::endl;
 	string filePath = request->getPath();
     checkRedirection(route);
     if (route.getAllowListing()){
@@ -111,6 +111,7 @@ void Response::handleGet(Server &server, Route const & route)
 
 void Response::handlePost(Server &server, Route const & route)
 {
+    std::cout << MAG << "IN POST" << EOC << std::endl;
 		server.getRoot(); //compile
     if (!route.getCgi().empty())
     {
@@ -128,6 +129,7 @@ void Response::handlePost(Server &server, Route const & route)
 
 void Response::handleDelete(Server &server, Route const & route)
 {
+    std::cout << MAG << "IN DELETE" << EOC << std::endl;
 		server.getRoot(); //for compile
     string filePath = request->getPath(); //getFilePath(server, route);
     //std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleDelete(Server &server, Route const & route)" << EOC << std::endl;
@@ -330,10 +332,13 @@ void Response::readBody(Route const & route)
     const string& body = request->getBody();
     
     //std::cout << RED << "Content Type is->[" << contentType[0] << "]" << EOC << std::endl;
-    if (contentType[0] == "application/x-www-form-urlencoded")
+    if (contentType.size() && contentType[0] == "application/x-www-form-urlencoded")
         processUrlEncodedBody(body);		//Mirar cuándo ocurre estoo
-    else if (contentType[0] == "multipart/form-data")
+    else if (contentType.size() && contentType[0] == "multipart/form-data")
         processMultipartFormDataBody(body, route);
+		else
+ 				throw ServerException(STATUS_400);
+
 
 		//Un caso para el else y mirar en el curl qué pasa
 }
