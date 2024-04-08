@@ -90,7 +90,7 @@
         methods = GET, POST, DELETE
         cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
     </route>
-
+    
     <route path="/postCgi">
         root = www/cgi-scripts
         methods = POST

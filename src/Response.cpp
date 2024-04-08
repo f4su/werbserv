@@ -23,13 +23,11 @@ void Response::handleResponse(Server &server, Route &route){
     try
     {
 
-				if (route.getAllowListingSet() == true)
-					route.setAllowListing(route.getAllowListing());
-				else
-					route.setAllowListing(server.getAllowListing());
-        std::cout << RED << "ROUTE IN HANDLEREPONSE P--------> " << route.getPath() << EOC << std::endl;
-
-				headers["Content-Type"] = "text/html";
+		if (route.getAllowListingSet() == true)
+			route.setAllowListing(route.getAllowListing());
+		else
+			route.setAllowListing(server.getAllowListing());
+		headers["Content-Type"] = "text/html";
         if (request->getMethod() == 'g'){
             std::cout << RED << "IN GET "<< EOC << std::endl;
             handleGet(server, route);
@@ -44,23 +42,16 @@ void Response::handleResponse(Server &server, Route &route){
         }
         else {
             std::cout << RED << "IN EXCEPT"<< EOC << std::endl;
-            //setStatus(STATUS_501);
             throw ServerException(STATUS_501);			
 		}
     }
     catch (ServerException & e)
     {
         std::cout << CYA << "MSGGGGGGGGGGGG>" << e.what() << EOC << std::endl;
-       // std::cout << CYA << "///////////////////////CODE IS 1 : " << code << EOC << std::endl;
-        //code = request->getStatusCode();
-       // std::cout << CYA << "///////////////////////CODE IS 1 : " << code << EOC << std::endl;
         int c;
         std::string strnb = e.what();
         std::stringstream    ss(strnb.substr(0, 3));
         ss >> c;
-        std::cout << CYA << "///////////////////////1st C IS 1: " << c << EOC << std::endl;
-        //std::cout << CYA << "///////////////////////1st CODE IS 1: " << code << EOC << std::endl;
-        std::cout << CYA << "///////////////////////1st FILEPATH IS 1: " << server.getErrorPages()[c] << EOC << std::endl;
         request->setStatusCode(strnb);
         readContent(server.getErrorPages()[c], e.what());
     }
@@ -87,14 +78,9 @@ void Response::handleGet(Server &server, Route const & route)
 		server.getRoot(); //Compile
 
     
-		string filePath = request->getPath();
-	
-    std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleGet(Server &server, Route const & route)" << EOC << std::endl;
+	string filePath = request->getPath();
     checkRedirection(route);
-    std::cout << CYA << "ALLOW LISTING--->" << route.getAllowListing() << EOC << std::endl;
-    std::cout << CYA << "ROUTE PATH--->" << route.getPath() << EOC << std::endl;
     if (route.getAllowListing()){
-        std::cout << CYA << "-----IS IN ALLOW LISTING---" << EOC << std::endl;
         vector<string> files = getFilesInDirectory(filePath);
         body = generateHtmlListing(files);
         return ;
@@ -123,7 +109,7 @@ void Response::handlePost(Server &server, Route const & route)
     if (!route.getCgi().empty())
     {
         string filePath = request->getPath(); //getFilePath(server, route);
-         std::cout << CYA << "FILEPATH IS : " << filePath << " <---handlePost(Server &server, Route const & route)" << EOC << std::endl;
+        //std::cout << CYA << "FILEPATH IS : " << filePath << " <---handlePost(Server &server, Route const & route)" << EOC << std::endl;
         removeConsecutiveChars(filePath, '/');
         Cgi cgi(route, filePath, *request);
         std::map<string, string> Cgiheaders = cgi.getResponseHeaders();
@@ -139,7 +125,7 @@ void Response::handleDelete(Server &server, Route const & route)
 {
 		server.getRoot(); //for compile
     string filePath = request->getPath(); //getFilePath(server, route);
-    std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleDelete(Server &server, Route const & route)" << EOC << std::endl;
+    //std::cout << CYA << "FILEPATH IS : " << filePath << " <---handleDelete(Server &server, Route const & route)" << EOC << std::endl;
     //removeConsecutiveChars(filePath, '/');
     if (!route.getCgi().empty())
     {
@@ -182,13 +168,12 @@ void Response::readContent(string const &filePath, string code)
 			return ;
 		}
     std::ifstream file(filePath);
-    std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(string const &filePath, string code)" << EOC << std::endl;
+    //std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(string const &filePath, string code)" << EOC << std::endl;
 
-		if (file.is_open())
+	if (file.is_open())
     {
-    		std::cout << CYA << "FILE OPENED!!!!!!!!" << EOC << std::endl;
         headers["Content-Type"] = mime[Cgi::getFileExt(filePath)];
-    		std::cout << CYA << "Content TYpe is->" << headers["Content-Type"] << EOC << std::endl;
+    		//std::cout << CYA << "Content TYpe is->" << headers["Content-Type"] << EOC << std::endl;
 				std::stringstream buffer;
         string line;
         while (std::getline(file, line))
@@ -228,7 +213,7 @@ string Response::tryFiles(Server const & server, Route const & route, string & r
         }
         file.close();
     }
-    std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, string & root)" << EOC << std::endl;
+    //std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, string & root)" << EOC << std::endl;
     if (route.getRouteType() != Route::FILE)
     {
         throw ServerException(STATUS_403);
@@ -339,7 +324,7 @@ void Response::readBody(Route const & route)
 
     const string& body = request->getBody();
     
-    std::cout << RED << "Content Type is->[" << contentType[0] << "]" << EOC << std::endl;
+    //std::cout << RED << "Content Type is->[" << contentType[0] << "]" << EOC << std::endl;
     if (contentType[0] == "application/x-www-form-urlencoded")
         processUrlEncodedBody(body);		//Mirar cuándo ocurre estoo
     else if (contentType[0] == "multipart/form-data")

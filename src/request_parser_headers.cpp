@@ -101,7 +101,6 @@ bool	check_headers_values(URI &rq, Server &server){
 		values = hdrs[it->first];
 		key = it->first;
 		if (valid_hdrs.find(it->first) == string::npos) continue ;
-		cout << MAG << "key~~~~~~~~~~" << key << EOC << std::endl;
 		if (key == CONTENT_TYPE_H){
 			cout << MAG << "val~~~~~~~~~~" <<  hdrs[CONTENT_TYPE_H][0]  << EOC << std::endl;
 		}
@@ -139,16 +138,12 @@ bool	check_headers_values(URI &rq, Server &server){
 						return (true);
 					}
 					rq.setPort(port);
-					cout << RED << "Port: [" << rq.getPort() << "]" << EOC << std::endl; 
+					//cout << RED << "Port: [" << rq.getPort() << "]" << EOC << std::endl; 
 				}
 				else {
 					rq.setHost(values[0]);
 				}
 			}
-
-
-
-			cout << "HOOOOSTIEEEE->" << rq.getHost() << "]" << std::endl;
 			if (values.size() != 1 || ( rq.getHost() != "127.0.0.1" &&
 						find(hosts.begin(), hosts.end(), rq.getHost()) == hosts.end())){
 				cout << RED << "Error: Host header doesn't match Server Names (400)" << EOC << std::endl; 

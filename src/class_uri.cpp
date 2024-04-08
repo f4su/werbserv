@@ -150,7 +150,6 @@ void	URI::setPort(size_t port){
 }
 
 void	URI::setPath(std::string path){
-	std::cerr << MAG << "////////////////////////////PATH-----> [" << path << "]" << EOC << std::endl;
 	this->path = path;
 }
 

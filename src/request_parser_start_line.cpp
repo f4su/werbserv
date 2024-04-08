@@ -68,8 +68,6 @@ bool	invalid_uri(const string &token, URI &rq, Server &server){
 		rq.setStatusCode(STATUS_400);
 		return (true);
 	}
-
-	cout << "URI to check is: [" << token << "]" << std::endl;
 	//We need to determine the URI form: origin (o), absolute (a), authority (y) or asterisk
 	char	form = 'u'; //u = undefined
 	if (determine_uri_form(token, &form)){
@@ -169,8 +167,6 @@ bool	invalid_method_in_route(URI &rq, Server &server){
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
 		route_mths = it->getMethods();
 		if (it->getPath() == rq.getPath()){
-			cout << CYA << "Routeeee path [" << it->getPath() << "] with method " << method << EOC << std::endl;
-			cout << CYA << "Methods in route [";
 			for (vector<string>::iterator loop = route_mths.begin(); loop != route_mths.end(); ++loop){
 				cout << *loop << " , ";
 			}

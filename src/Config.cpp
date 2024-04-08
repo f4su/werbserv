@@ -42,7 +42,22 @@ void Config::parse(std::string const &configPath)
             throw ServerException("Invalid config file", lineNb);
     }
 }
+bool getPathMatch(Server &server, std::string path)
+{
+    vector<Route>		routes = server.getRoutes();
+    size_t				longestPrefix	= 0;
+    bool				pathMatch = false;
 
+	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
+		if (it->getPath().find(path) == 0){
+			if (it->getPath().size() > longestPrefix){
+				longestPrefix = it->getPath().size();
+                pathMatch = true;
+			}
+		}
+	}
+    return (pathMatch);
+}
 Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, std::stack<state> &stateStack)
 {
     stateStack.push(SERVER);
@@ -66,6 +81,8 @@ Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, 
             if (!path.empty())
             {
                 Route route = parseRoute(file, line, lineNb, stateStack);
+                if (getPathMatch(server, path) == true)
+                    throw ServerException("Route path already exists", lineNb);
                 route.setPath(path);
                 server.addRoute(route);
             }
@@ -77,7 +94,6 @@ Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, 
             throw ServerException("Invalid server block", lineNb);
         // else
         //     throw ServerException("Invalid server block", lineNb);
-
         server.fill(line, lineNb);
     }
 	server.print();
@@ -107,7 +123,7 @@ Route Config::parseRoute(std::ifstream &file, std::string &line, int &lineNb, st
             throw ServerException("Invalid route block", lineNb);
         route.fill(line, lineNb);
     }
-	route.print();
+	//route.print();
     return (route);
 }
 
