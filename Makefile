@@ -64,6 +64,7 @@ fclean: clean
 	@echo "$(MAG)Removing binary -files...$(EOC)"
 	@$(RM) $(NAME)
 	@rm -rf $(OBJ_DIR)
+	@rm -rf ./www/uploads/uploaded/*
 	@echo "$(RED)fclean done 🛁$(EOC)\n"
 
 re: fclean all

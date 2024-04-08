@@ -19,7 +19,6 @@ bool	responding_when_error(int &client, Server &server, URI &rq){
 	string	parseErrs("400 404 405 406 409 411 413 414 415 417 500 501 502 505 507");
 	string	status(rq.getStatusCode());
 
-	cout << "\tStatus is->[" << rq.getStatusCode() << "]" << std::endl;
 	status = status.size() > 0 ? status.substr(0, 3) : status;
 	if (status.size() > 0  && parseErrs.find(status) != string::npos){
 		response += rq.getStatusCode();
@@ -42,7 +41,7 @@ void	changePath(Server &server, URI &rq, Route &route, bool fullMatch){
 		route.setAllowListing(route.getAllowListing());
 	else
 		route.setAllowListing(server.getAllowListing());
-	cerr << RED << "Change Path Allow Listing is ->" << route.getAllowListing() << EOC << std::endl;
+	//cerr << RED << "Change Path Allow Listing is ->" << route.getAllowListing() << EOC << std::endl;
 
 	//Redirect
 	if (route.getRedirect().size()){
@@ -51,7 +50,6 @@ void	changePath(Server &server, URI &rq, Route &route, bool fullMatch){
 
 	//Root
 	else if (route.getRoot().size()){
-		cerr << RED << "SUBSSSSSSSSSTR ->" << sub << EOC << std::endl;
 		root = route.getRoot();
 		if (root.at(root.size()-1) != '/' && sub.size() && sub.at(0) != '/')
 			newPath = (root + "/" + sub);
@@ -62,7 +60,6 @@ void	changePath(Server &server, URI &rq, Route &route, bool fullMatch){
 		rq.setPath(newPath);
 	}
 	else if (server.getRoot().size()){
-		cerr << RED << "SUBSSSSSSSSSTR ->" << sub << EOC << std::endl;
 		root = server.getRoot();
 		if (root.at(root.size()-1) != '/' && sub.size() && sub.at(0) != '/')
 			newPath = (root + "/" + sub);
@@ -93,11 +90,8 @@ int resolveRedirIndex(Server &server, URI &rq)
 	size_t				longestPrefix	= 0;
 	int					pathMatch = -1;
 
-	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
-	cout << MAG << "Path antess de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
 		if (rq.getPath().find(it->getPath()) == 0){
-			cout << MAG << "it->Path is->[" << it->getPath() << "]" << EOC << std::endl;
 
 			if (it->getPath().size() > longestPrefix){
 				pathMatch = ind;
@@ -111,8 +105,6 @@ int resolveRedirIndex(Server &server, URI &rq)
 		return (pathMatch);
 	}
 	changePath(server, rq, server.getRoutes()[pathMatch], longestPrefix == rq.getPath().size() ? true : false);
-	cout << MAG << "Fuera de ChangePath Allow->" << server.getRoutes()[pathMatch].getAllowListing() << "]" << EOC << std::endl;
-	cout << MAG << "Path después de RESOLVE is->[" << rq.getPath() << "]" << EOC << std::endl;
 	return (pathMatch);
 
 }
@@ -149,13 +141,13 @@ void respond_connection(int &client, Server &server, URI &rq){
 	} 
 	else{
 		*/
-		cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
+		//cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 		response.handleResponse(server, server.getRoutes()[routeInd]);
 //	}
 
 
 	std::string res = response.getResponse();
-	cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
+	//cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
 
 	//cerr << CYA << "\nRESPONSE>:\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
 

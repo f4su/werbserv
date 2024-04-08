@@ -42,17 +42,13 @@ Server Response::getServer()
     vector<Server>::iterator it = Config::find(request->getHost(), request->getPort());
     if (it != Config::end())
         if (request->getMethod() != 'g' && it->getClientMaxBodySize() != 0 && \
-            request->getBody().size() > it->getClientMaxBodySize())
-            {
-                //setStatus(STATUS_413);
+            request->getBody().size() > it->getClientMaxBodySize()){
                 throw ServerException(STATUS_413);
             }
         return *it;
     Server s = *(Config::begin());
     if (request->getMethod() != 'g' && s.getClientMaxBodySize() != 0 && \
-            request->getBody().size() > s.getClientMaxBodySize())
-            {
-                //setStatus(STATUS_413);
+            request->getBody().size() > s.getClientMaxBodySize()){
                 throw ServerException(STATUS_413);
             }
     return (s);
@@ -78,7 +74,6 @@ std::pair<string, bool>    getMatchedPath(string serverRootPath, string path)
 }
 void Response::checkRedirection(Route const & route)
 {
-    std::cout << CYA <<"CHECKING REDIRECTION ON PATH--------> " << route.getPath() << EOC << std::endl;
     if (!route.getRedirect().empty())
     {
         headers["Location"] = route.getRedirect();

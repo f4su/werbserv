@@ -96,7 +96,7 @@
         cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
         allow_listing = false
     </route>
-
+    
     <route path="/postCgi">
         root = www/cgi_scripts
         methods = POST, GET

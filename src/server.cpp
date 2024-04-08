@@ -131,8 +131,7 @@ bool	Server::setHost(const string & host){
 	}
 	ip_addr |= (uint32_t)octet << (24 - octet_index * 8);
 
-	std::cout << "Address isssssssssssss -> " << ip_addr << std::endl;
-  this->host = ip_addr; 
+      this->host = ip_addr; 
 	return (false);
 }
 
@@ -223,6 +222,8 @@ void Server::fill(string const &line, int &lineNb){
         if (*end != '\0')
             throw ServerException("Invalid server line", lineNb); 
         setPort(port);
+        if (getPort() < 0 || getPort() > 65535)
+            throw ServerException("Invalid Port");
     }
     else if (option == "host" && host == 0) {
         if (setHost(value)){
