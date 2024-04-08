@@ -1,4 +1,3 @@
-
 <server>
     host = 127.0.0.1
     port = 7070
@@ -29,6 +28,11 @@
     <route path="/listErrorPages">
     		root = www/error_pages
     		allow_listing = true
+    </route>
+
+    <route path="/listCgis">
+        root = www/cgi_scripts
+        allow_listing = true
     </route>
 
 
@@ -90,14 +94,15 @@
         root = www/cgi_scripts
         methods = GET, POST, DELETE
         cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
+        allow_listing = false
     </route>
 
     <route path="/postCgi">
-        root = www/cgi-scripts
-        methods = POST
+        root = www/cgi_scripts
+        methods = POST, GET
         index = /F_Post.php
-        cgi = .php:cgi-bin/php-cgi
-    		allow_listing = false
+        cgi = .php:cgi-bin/php-cgi, .py:/usr/local/bin/python3
+    	allow_listing = false
     </route>
 
 </server>

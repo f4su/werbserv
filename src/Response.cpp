@@ -106,12 +106,18 @@ void Response::handleGet(Server &server, Route const & route)
 
     if (!route.getCgi().empty())
     {
+        std::cout << CYA << "-----------------------------------------------------AQUIIIIIIIII" << EOC << std::endl;
         Cgi cgi(route, filePath, *request);
+        std::cout << CYA << "-------------------------------------------------------DESPUEEEEEEEESSSSSS" << EOC << std::endl;
         std::map<string, string> Cgiheaders = cgi.getResponseHeaders();
+        std::cout << CYA << "----------------------------------------------------------------HOLAAAAAAAAAAA" << EOC << std::endl;
         if (Cgiheaders.find("Content-Type") == Cgiheaders.end())
             headers["Content-Type"] = "text/html";
+        std::cout << CYA << "-----------------------------------------------------------ADIOOOOOOOOOOOS" << EOC << std::endl;
         headers.insert(Cgiheaders.begin(), Cgiheaders.end());
+        std::cout << CYA << "-----------------------------------------------SIUUUUUUUUUUUUUUUUUUUU" << EOC << std::endl;
         body = cgi.getResponseBody();
+        std::cout << CYA << "----------------------------------------------------PEPEEEEEEEEEEEEEEWE" << EOC << std::endl;
         return; 
     }
     readContent(filePath, STATUS_200);
@@ -123,7 +129,6 @@ void Response::handlePost(Server &server, Route const & route)
     if (!route.getCgi().empty())
     {
         string filePath = request->getPath(); //getFilePath(server, route);
-         std::cout << CYA << "FILEPATH IS : " << filePath << " <---handlePost(Server &server, Route const & route)" << EOC << std::endl;
         removeConsecutiveChars(filePath, '/');
         Cgi cgi(route, filePath, *request);
         std::map<string, string> Cgiheaders = cgi.getResponseHeaders();

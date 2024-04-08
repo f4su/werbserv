@@ -9,14 +9,14 @@
 <body>
     <div class="cover"><h1>Welcome to WebServ (?)</h1><p class="lead">If you see this page i guess the WebServ is working (hope so) <br> Further configuration is required.</p><br><p>Thank you for using WebServ (pass us pls we're kinda good people)</p>
         <ul>
-            <li><a href="/kapouet">Error Pages</a></li>
-            <li><a href="/uploads">Uploads</a></li>
+            <li><a href="/listErrorPages">Error Pages</a></li>
+            <li><a href="/browserPost">Uploads</a></li>
             <li><a href="/www/cgi_scripts/F_Post.php">Cgi DataBase</a></li>
-            <li><a href="/cgi">cgi</a></li>
+            <li><a href="/listCgis">Cgi List</a></li>
         </ul>
     <div class="get-example">
         <h2>Php CGI test, GET</h2>
-        <form action="/www/cgi_scripts/Get.php" method="GET">
+        <form action="/cgi_scripts/Get.php" method="GET">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required>
             <br>
@@ -27,7 +27,7 @@
         </form>
         <br>
         <h2>Python CGI test, POST</h2>
-        <form action="/www/cgi_scripts/py_cgi.py" method="POST">
+        <form action="/cgi_scripts/py_cgi.py" method="POST">
             <label for="message">message:</label>
             <input type="text" id="message" name="message" required>
             <br>

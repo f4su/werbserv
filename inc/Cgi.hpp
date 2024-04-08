@@ -25,7 +25,7 @@ public:
 	std::map<std::string, std::string> getResponseHeaders();
 	std::map<std::string, std::string> getEnv(URI const & req, std::string const & filename);
 	char	**mapToArray(std::map <std::string, std::string> const & map);
-	std::string getQuery(std::string const & uri);
+	std::string getQuery(URI const & req);
 	static std::string getFileExt(std::string const &path);
 	void executeCgi(URI const & req);
 };

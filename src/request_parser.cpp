@@ -96,9 +96,9 @@ std::string URI::getVersion() const {
     return version;
 }
 
-std::string URI::getRawBody() const {
+/* std::string URI::getRawBody() const {
     return rawBody;
-}
+} */
 
 
 std::string URI::getBoundary() const

@@ -57,7 +57,7 @@ class	URI
 		
 
 ////// Esto es de joselito
-		string rawBody;
+		//string rawBody;
 		string uri;
 		string version;
 		string	boundary;
@@ -116,7 +116,7 @@ class	URI
 		void				setStatusCode(string status);
 
 /////////////Esto es de Joselitoo
-		string	getRawBody() const;
+		//string	getRawBody() const;
     string	getUri() const;
     string	getVersion() const;
 

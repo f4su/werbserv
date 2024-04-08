@@ -107,7 +107,7 @@ Route Config::parseRoute(std::ifstream &file, std::string &line, int &lineNb, st
             throw ServerException("Invalid route block", lineNb);
         route.fill(line, lineNb);
     }
-	route.print();
+	//route.print();
     return (route);
 }
 

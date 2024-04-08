@@ -48,10 +48,10 @@ std::map<std::string, std::string> Cgi::getEnv(URI const & req, std::string cons
 														req.getMethod() == 'p' ? "POST" : "";
 	env["PATH_INFO"] = filename;
 	env["PATH_TRANSLATED"] = filename;
-	env["QUERY_STRING"] = getQuery(req.getUri()); //req.getQuery();
+	env["QUERY_STRING"] = getQuery(req);
 	env["REMOTE_HOST"] = req.getHost();
-	if (req.getRawBody().size() > 0)
-		env["CONTENT_LENGTH"] = toString(req.getRawBody().size());
+	if (req.getBody().size() > 0)
+		env["CONTENT_LENGTH"] = toString(req.getBody().size());
 	if (req.getHeaders().count("CONTENT-TYPE") > 0)
 		env["CONTENT_TYPE"] = req.getHeaders()["CONTENT-TYPE"].at(0);
 	return (env);
@@ -72,12 +72,19 @@ char	**Cgi::mapToArray(std::map <std::string, std::string> const & map)
 	return (array);
 }
 
-std::string Cgi::getQuery(std::string const & uri)
+std::string Cgi::getQuery(URI const & req)
 {
 	std::string query;
-	size_t pos = uri.find("?");
-	if (pos != std::string::npos)
-		query = uri.substr(pos + 1);
+	size_t		ind = 0;
+	mapStrStr	param = req.getParams();
+
+	for (mapStrStr::iterator it = param.begin(); it != param.end(); ++it){
+		query += it->first + "=" + it->second;
+		if (ind != param.size() - 1)
+			query += "&";
+		++ind;
+	}
+	std::cerr << RED << "QUERY IS ------>" << query << EOC << std::endl;
 	return (query);
 }
 
@@ -102,7 +109,6 @@ std::string Cgi::getFileExt(std::string const &path)
 
 void    Cgi::executeCgi(URI const & req)
 {
-	std::string cgiPath;
 	int fd[2];
 
 	if (pipe(fd) == -1)
@@ -112,10 +118,12 @@ void    Cgi::executeCgi(URI const & req)
 		throw ServerException(STATUS_500);
 	int	status;
 	std::string binPath = cgiRoute.getCgi()[getFileExt(filename)];
+
 	if (pid == 0)
 	{
-		if (dup2(fd[0], 0) == -1 || dup2(fd[1], 1) == -1)
+		if (dup2(fd[0], 0) == -1 || dup2(fd[1], 1) == -1){
 			throw ServerException(STATUS_500);
+		}
 		close(fd[1]);
 		close(fd[0]);
 		char *argv[] = {const_cast<char *>(binPath.c_str()), const_cast<char *>(filename.c_str()), NULL};
@@ -124,7 +132,7 @@ void    Cgi::executeCgi(URI const & req)
 	}
 	else if (pid > 0)
 	{
-		write(fd[1], req.getRawBody().c_str(), req.getRawBody().size());
+		write(fd[1], req.getBody().c_str(), req.getBody().size());
 		waitpid(pid, &status, 0);
 		if (WEXITSTATUS(status) != 0)
 			throw ServerException(STATUS_502);
