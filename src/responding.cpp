@@ -24,7 +24,6 @@ bool	responding_when_error(int &client, Server &server, URI &rq){
 		response += rq.getStatusCode();
 		response += CRLF;
 		fill_4xx_5xx_response(response, rq, server);
-		cout << "\tGoing to response Error->" << response << std::endl;
 		if (send(client, response.c_str(), response.size(), 0) == -1){
 			cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
 		}
@@ -92,8 +91,8 @@ int resolveRedirIndex(Server &server, URI &rq)
 
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
 		if (rq.getPath().find(it->getPath()) == 0){
-
 			if (it->getPath().size() > longestPrefix){
+				rq.setRouteFound(it->getPath());
 				pathMatch = ind;
 				longestPrefix = it->getPath().size();
 			}
@@ -111,45 +110,28 @@ int resolveRedirIndex(Server &server, URI &rq)
 
 void respond_connection(int &client, Server &server, URI &rq){
 
-	cout << MAG << "Headers Size[" << rq.getHeaders().size() << "]" << EOC << std::endl;
 	check_body_size(server, rq);
 	size_t	routeInd;
+
 	if (rq.getStatusCode().size() == 0){
 		routeInd = resolveRedirIndex(server, rq);
+	}
+	if (rq.getRouteFound().size()){
+		invalid_method_in_route(rq, server.getRoutes()[routeInd]);
 	}
 	if (responding_when_error(client, server, rq)){
 		return ;
 	}
 
+	cout << MAG << "Route Resolveee->[" << server.getRoutes()[routeInd].getPath() << "]" << EOC << std::endl;
+
 	Response	response(rq);
 	rq.setStatusCode(STATUS_200);
 
-/*
-	if (rq.getPath() == "/"){
-		rq.setPath(rq.getPath() + server.getRoot() + "/" + server.getIndex()[0]);
-		Route	serverRoute;
-		serverRoute.setPath("/");
-		serverRoute.setRoot(server.getRoot());
-		serverRoute.setIndex(server.getIndex());
-		serverRoute.setAllowListing(server.getAllowListing());
-		serverRoute.setErrorPages(server.getErrorPages());
-		vector<string>	mths;
-		//mths.push_back("GET");
-
-		std::cerr << MAG << "PATHHhHHHHHHHHHHHHHHHHH--->" << rq.getPath() << EOC << std::endl;
-		response.handleResponse(server, serverRoute);
-	} 
-	else{
-		*/
-		//cout << "Status Antes de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
-		response.handleResponse(server, server.getRoutes()[routeInd]);
-//	}
+	response.handleResponse(server, server.getRoutes()[routeInd]);
 
 
 	std::string res = response.getResponse();
-	//cout << "Status después de Jose is->[" << rq.getStatusCode() << "]" << std::endl;
-
-	//cerr << CYA << "\nRESPONSE>:\n" << displayHiddenChars(res) << "\n]" << EOC << std::endl;
 
 	if ( send(client, res.c_str(), res.size(), 0) == -1){
 		cerr << RED << "Error: Couldn't send response for client " << client << EOC << std::endl;
@@ -190,7 +172,6 @@ void	add_error_page_response(string &response, string &filePath, URI &rq){
 	
 		response += "Content-Type: ";
 		response += "text/html; charset=UTF-8";
-		//response += mime[Cgi::getFileExt(filePath)];		NOT WORKINGGGG
 		response += CRLF;
 		std::stringstream buffer;
 		string line;
@@ -214,13 +195,11 @@ void	add_error_page_response(string &response, string &filePath, URI &rq){
 void	fill_4xx_5xx_response(string &response, URI &rq, Server &server){
 	string	code = rq.getStatusCode();
 
-	cout << CYA << "STATUS-CODE+++++++>>>[" << code << "]" << EOC << std::endl;
 	if (code.size() == 0 || (code.front() != '4' && code.front() != '5')){
 		return ;
 	}
 	string						strNb = code.substr(0, 3);
 	int 							nb		= 0;
-	cout << CYA << "CODE+++++++>>>[" << strNb << "]" << EOC << std::endl;
 	std::stringstream	ss(strNb);
 	ss >> nb;
 	if (ss.fail() || nb < 400 || nb > 599){
@@ -230,7 +209,7 @@ void	fill_4xx_5xx_response(string &response, URI &rq, Server &server){
 	cout << CYA << "RQ_PATH+++++++>>>[" << rq.getPath() << "]" << EOC << std::endl;
 	vector<Route>	routes = server.getRoutes();
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
-		if (rq.getPath() != it->getPath()) continue ;
+		if (it->getPath() != rq.getRouteFound()) continue ;
 		if (it->getErrorPages().find(nb) != it->getErrorPages().end()){
 			cout << CYA << "ERR PAGE IN PATH++++++" << EOC << std::endl;
 			return ( add_error_page_response(response, (it->getErrorPages())[nb], rq) );
@@ -239,9 +218,6 @@ void	fill_4xx_5xx_response(string &response, URI &rq, Server &server){
 
 
 	mapIntStr	errPages = server.getErrorPages();
-	for (mapIntStr::iterator it = errPages.begin(); it != errPages.end(); ++it){
-		cout << CYA << "KEYY++:" << it->first << EOC << std::endl;
-	}
 	if (errPages.find(nb)  != errPages.end()){
 		cout << CYA << "ERR PAGE IN SERVER++++++SIZE:" << server.getErrorPages().size() << EOC << std::endl;
 		return ( add_error_page_response(response, (server.getErrorPages())[nb], rq) );
@@ -273,11 +249,15 @@ void check_body_size(Server &server, URI &rq){
 	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;
 	*/
 
+	cout << CYA << "\n\n\n*********CHECKING BODY SIZE*************" << EOC << std::endl;
+	cout << CYA << "Body Size is ->" << bodySize << EOC << std::endl;
+	cout << CYA << "Body is ->[" << EOC << rq.getBody() << CYA << "]"<< EOC << std::endl;
+	cout << CYA << "Max is ->[" << EOC << max << CYA << "]"<< EOC << std::endl;
+
 	if (rq.getStatusCode().size()){
 		return ;
 	}
 
-	
 	if (hdrs.find(CONTENT_TYPE_H) != hdrs.end() && hdrs[CONTENT_TYPE_H][0] == "multipart/form-data"){
 		multipart_h = true;
 	}

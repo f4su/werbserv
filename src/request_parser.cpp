@@ -35,7 +35,7 @@ bool	invalid_request(URI &rq, Server &server){
 		rq.setStatusCode(STATUS_400);
 		return (true);
 	}
-	if (invalid_start_line(tokens[0], rq, server)){
+	if (invalid_start_line(tokens[0], rq)){
 		cout << RED << "Request error: Invalid Start Line" << EOC << std::endl;
 		return (true);
 	}
@@ -85,25 +85,12 @@ void	tokenizer(string raw_request, vector<vector<string> >	&tokens){
 	}
 }
 
-
-///////////////////////////Esto es de Joselitoo
-
-std::string URI::getUri() const {
-    return uri;
-}
-
 std::string URI::getVersion() const {
     return version;
 }
-
-/* std::string URI::getRawBody() const {
-    return rawBody;
-} */
 
 
 std::string URI::getBoundary() const
 {
     return boundary;
 }
-
-////////////////////////////////////////////////////

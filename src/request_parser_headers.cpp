@@ -164,6 +164,16 @@ bool	check_headers_values(URI &rq, Server &server){
 			rq.setIsMultipart(true);
 		}
 
+		else if (key == CONTENT_LENGTH_H){
+			int								result = -1;
+			string						strNb = hdrs[CONTENT_LENGTH_H][0];
+			std::stringstream	ss(strNb);
+			ss >> result;
+			if (!ss.fail() && result >= 0){
+				rq.setContentLength(result);
+			}
+		}
+
 	}
 	if (hostHdr == false){
 		rq.setStatusCode(STATUS_400);

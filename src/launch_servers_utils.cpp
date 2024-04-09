@@ -79,7 +79,6 @@ std::string displayHiddenChars(string& str) {
 void	calculate_max(vector<Server> &servers){
 	int	max = 0;
 
-	cout << MAG << "CALCULATING MAX---->" << EOC << std::endl;
 	if (servers.empty()){
 		return ;
 	}

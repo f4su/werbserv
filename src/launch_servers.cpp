@@ -186,7 +186,9 @@ void parse_rq(int &client, Server &server, URI &rq){
 			return ;
 		}
 	}
-	if (rq.getIsChunked() == false && rq.getIsMultipart() == false){
+	cout << RED << "Coooooooooooooooontent Length ========>" << rq.getBody().size() << EOC << std::endl;
+	if (rq.getIsChunked() == false && rq.getIsMultipart() == false &&
+			(rq.getContentLength() == -1 || static_cast<size_t>(rq.getContentLength()) == rq.getBody().size())){
 		rq.setGoingToResponse(true);
 	}
 }

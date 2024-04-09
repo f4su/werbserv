@@ -1,7 +1,7 @@
 #include	"../inc/request_parser.hpp"
 
 URI::URI() : request(""), body(""), statusCode(""),
-	goingToResponse(false), closeConnection(false),
+	goingToResponse(false), closeConnection(false), contentLength(-1), routeFound(""),
 	method('u'), scheme(""), authority(""), host(""), port(80), path(""), query(""), fragment(""),
 	headers_parsed(false), headers_size(0), isChunked(false), isMultipart(false), chunkSize(0), expect_continue(false){
 }
@@ -9,7 +9,7 @@ URI::URI() : request(""), body(""), statusCode(""),
 
 URI::URI(URI const &copy) :
 	request(copy.request), body(copy.body),
-	goingToResponse(copy.goingToResponse), closeConnection(copy.closeConnection),
+	goingToResponse(copy.goingToResponse), closeConnection(copy.closeConnection), contentLength(copy.contentLength), routeFound(copy.routeFound),
 	method(copy.method), scheme(copy.scheme), authority(copy.authority), host(copy.host), port(copy.port), path(copy.path), query(copy.query), fragment(copy.fragment), params(copy.params),
 	headers_parsed(copy.headers_parsed), headers_size(copy.headers_size), isChunked(copy.isChunked), isMultipart(copy.isMultipart), chunkSize(copy.chunkSize), expect_continue(copy.expect_continue){
 
@@ -36,8 +36,16 @@ bool	URI::getGoingToResponse()const{
 	return (goingToResponse);
 }
 
+string	URI::getRouteFound()const{
+	return (routeFound);
+}
+
 bool	URI::getCloseConnection()const{
 	return (closeConnection);
+}
+
+int		URI::getContentLength()const{
+	return (contentLength);
 }
 
 bool	URI::getHeadersParsed()const{
@@ -121,8 +129,16 @@ void	URI::setGoingToResponse(bool go){
 	goingToResponse = go;	
 }
 
+void	URI::setRouteFound(string route){
+	this->routeFound = route;
+}
+
 void	URI::setCloseConnection(bool close){
 	this->closeConnection = close;
+}
+
+void	URI::setContentLength(int length){
+	this->contentLength = length;
 }
 
 void	URI::setHeadersParsed(bool parsed){
@@ -201,6 +217,8 @@ URI	&	URI::operator=(const URI &rhs){
 	this->request = rhs.getRequest();
 	this->method = rhs.getMethod();
 	this->goingToResponse = rhs.getGoingToResponse();
+	this->routeFound = rhs.getRouteFound();
+	this->contentLength = rhs.getContentLength();
 	this->closeConnection = rhs.getCloseConnection();
 	this->headers_parsed = rhs.getHeadersParsed();
 	this->scheme = rhs.getScheme();

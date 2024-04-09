@@ -1,35 +1,96 @@
-curl -X POST "http://localhost:8080?key=eyou" --data-binary 
 
+*********************************** Checking Content Length - MaxBodySize ********************************
 
+//Long body with curl / if longet that client_max_body_size ->(413)
 
-
-
-
-
-
-//Long body with curl (413)
-
-curl -X POST	\
-	-H "Content-Type: plain/text" \
-	--data "Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street, and methodically knocking people’s hats off—then, I account it high time to get to sea as soon as I can. This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me." \
+curl \
+	--data-binary "@mobyDick.txt" \
 	http://localhost:8080
 
+curl \
+	--data-binary "@mobyDick.txt" \
+	http://localhost:8080/something
 
 
+*********************************** Checking Chunked Request ********************************
+
+curl \
+	-H "Content-Length: 1116" \
+	-H "Transfer-Encoding: chunked" \
+	--data-binary "@mobyDick.txt" \
+	http://localhost:8080
+
+curl \
+	-H "Content-Length: 1116" \
+	-H "Transfer-Encoding: chunked" \
+	--data-binary "@mobyDick.txt" \
+	http://localhost:8080/something
+
+
+*********************************** Checking Implemented Methods ********************************
 
 //	Methods not implemented in /curlPostOnly
 
-curl -X GET http://localhost:8080/curlPostOnly
+	//Implemented
+		curl -X POST http://localhost:8080/curlPostOnly
+		curl -X POST --data-binary "@juan.txt" http://localhost:8080/curlPostOnly
+		curl -X POST --data-binary "@juan.txt" "http://localhost:8080/curlPostOnly?filename=juanito"
+		curl -X POST --data-binary "@juan.txt" http://localhost:8080/curlPostOnly/something
 
-curl -X DELETE http://localhost:8080/curlPostOnly
-curl -X POST --data-binary "@juan.txt" http://localhost:8080/curlPostOnly
+	//Not Implemented
+		curl -X GET http://localhost:8080/curlPostOnly
+		curl -X GET http://localhost:8080/curlPostOnly/something
+		curl -X DELETE http://localhost:8080/curlPostOnly
+		curl -X DELETE http://localhost:8080/curlPostOnly/something
 
 
 
 //	Methods not implemented in /getOnly
-curl -X GET http://localhost:8080/getOnly					//Funciona
-curl -X GET http://localhost:8080/getOnly/pouet		//Funciona
 
+	//Implemented
+			//404
+		curl -X GET http://localhost:8080/getOnly
+			//juanito
+		curl -X GET http://localhost:8080/getOnly/juanito
+
+	//Not Implemented
+		curl -X POST http://localhost:8080/getOnly
+		curl -X POST http://localhost:8080/getOnly/something
+		curl -X DELETE http://localhost:8080/getOnly
+		curl -X DELETE http://localhost:8080/getOnly/something
+
+
+
+//	Methods not implemented in /curlDeleteOnly
+
+	//Implemented
+			//404
+		curl -X DELETE http://localhost:8080/curlDeleteOnly
+		curl -X DELETE http://localhost:8080/curlDeleteOnly/something
+			//juanito
+		curl -X DELETE http://localhost:8080/curlDeleteOnly/juanito
+
+	//Not Implemented
+		curl -X POST http://localhost:8080/curlDeleteOnly
+		curl -X POST http://localhost:8080/curlDeleteOnly/something
+		curl -X DELETE http://localhost:8080/curlDeleteOnly
+		curl -X DELETE http://localhost:8080/curlDeleteOnly/something
+
+
+
+
+
+
+
+
+
+//	Methods not implemented in /getOnly
+
+
+	//Implemented
+
+
+	//Not Implemented
 
 curl -X DELETE http://localhost:8080/getOnly			//Funciona
 curl -X DELETE http://localhost:8080/getOnly/pouet

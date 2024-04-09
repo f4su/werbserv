@@ -34,6 +34,8 @@ class	URI
 
 		//	Utils
 		bool				closeConnection;
+		int					contentLength;
+		string			routeFound;
 
 		//	URI
 		char				method;
@@ -57,8 +59,6 @@ class	URI
 		
 
 ////// Esto es de joselito
-		//string rawBody;
-		string uri;
 		string version;
 		string	boundary;
 
@@ -76,6 +76,8 @@ class	URI
 		string			getBody()const;
 		bool				getGoingToResponse()const;
 		bool				getCloseConnection()const;
+		int					getContentLength()const;
+		string			getRouteFound()const;
 		bool				getHeadersParsed()const;
 		char				getMethod()const;
 		string			getScheme()const;
@@ -96,6 +98,8 @@ class	URI
 		void				setRequest(string &rq);
 		void				setBody(string &bd);
 		void				setCloseConnection(bool close);
+		void				setContentLength(int length);
+		void				setRouteFound(string route);
 		void				setHeadersParsed(bool parsed);
 		void				setGoingToResponse(bool go);
 		void				setMethod(char mth);
@@ -116,8 +120,6 @@ class	URI
 		void				setStatusCode(string status);
 
 /////////////Esto es de Joselitoo
-		//string	getRawBody() const;
-    string	getUri() const;
     string	getVersion() const;
 
 		string	getContentType() const;
@@ -146,12 +148,12 @@ bool	invalid_query_syntax(const string &query, URI &rq_uri);
 bool	invalid_port(const string &port, URI &rq_uri);
 
 //	../src/request_parser_start_line.cpp
-bool	invalid_start_line(vector<string> const &line, URI &rq_uri, Server &server);
+bool	invalid_start_line(vector<string> const &line, URI &rq_uri);
 bool	invalid_method(string const &method, URI &rq);
-bool	invalid_uri(const string &token, URI &rq_uri, Server &server);
+bool	invalid_uri(const string &token, URI &rq);
 bool	invalid_chars(const string &path);
 bool	determine_uri_form(const string &uri, char *form);
-bool	invalid_method_in_route(URI &rq, Server &server);
+bool	invalid_method_in_route(URI &rq, Route &route);
 
 //	../src/request_parser_headers.cpp
 bool	invalid_header(vector<vector<string> > &tokens, URI &rq_uri, Server &server);

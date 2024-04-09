@@ -112,6 +112,7 @@ bool read_multipart(int &client, URI &rq){
 			cerr << RED << "Error: Invalid multipart" << EOC << std::endl;
 			return (true);
 		}
+		rq.setContentLength(rq.getBody().size());
 		rq.setIsMultipart(false);
 	}
 	cerr << RED << "Ends Multipart" << EOC << std::endl;	

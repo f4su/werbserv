@@ -5,7 +5,7 @@
 
 using	std::cout;
 
-bool invalid_start_line(vector<string> const &line, URI &rq, Server &server){
+bool invalid_start_line(vector<string> const &line, URI &rq){
 	//Checking total tokens
 	if (line.size() != 3){
 		cout << RED << "Request Error: Invalid start-line tokens" << EOC << std::endl;
@@ -32,7 +32,7 @@ bool invalid_start_line(vector<string> const &line, URI &rq, Server &server){
 		cout << RED << std::endl << "\tRequest error: URI too long" << EOC << std::endl;
 		return (true);
 	}
-	if (invalid_uri(line[1], rq, server)){
+	if (invalid_uri(line[1], rq)){
 		cout << RED << std::endl << "\tRequest error: Invalid URI" << EOC << std::endl;
 
 		return (true);
@@ -62,7 +62,7 @@ bool	invalid_method(string const &method, URI &rq){
 	return (false);
 }
 
-bool	invalid_uri(const string &token, URI &rq, Server &server){
+bool	invalid_uri(const string &token, URI &rq){
 	if (invalid_chars(token)){
 		cout << RED << std::endl << "\tRequest error: Invalid URI (not properly encoded)" << EOC << std::endl;
 		rq.setStatusCode(STATUS_400);
@@ -113,9 +113,6 @@ bool	invalid_uri(const string &token, URI &rq, Server &server){
 		return (true);
 	}
 
-	if (invalid_method_in_route(rq, server)){
-			return (true);
-	}
 	return (false);
 }
 
@@ -157,28 +154,20 @@ bool	determine_uri_form(const string &uri, char *form){
 	return (false);
 }
 
-bool	invalid_method_in_route(URI &rq, Server &server){
+bool	invalid_method_in_route(URI &rq, Route &route){
 	char						mth = rq.getMethod();
 	string					method;
-	vector<string>	route_mths;
-	vector<Route>		routes = server.getRoutes();
+	vector<string>	route_mths = route.getMethods();
 
 	method = mth == 'g' ? "GET" : mth == 'p' ? "POST" : mth == 'd' ? "DELETE" : "";
-	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
-		route_mths = it->getMethods();
-		if (it->getPath() == rq.getPath()){
-			for (vector<string>::iterator loop = route_mths.begin(); loop != route_mths.end(); ++loop){
-				cout << *loop << " , ";
-			}
-			cout << "]" << EOC << std::endl;
-			if (route_mths.size() == 0 && method.size())
-				return false;
-			if (std::find(route_mths.begin(), route_mths.end(), method) == route_mths.end()){
-				rq.setStatusCode(STATUS_501);
-				cout << RED << std::endl << "\tRequest error: Method not implemented on path (501)" << EOC << std::endl;
-				return (true);
-			}
-		}
+
+	if (route_mths.size() == 0 && method.size())
+		return false;
+	if (std::find(route_mths.begin(), route_mths.end(), method) == route_mths.end()){
+		rq.setStatusCode(STATUS_501);
+		cout << RED << std::endl << "\tRequest error: Method not implemented on path (501)" << EOC << std::endl;
+		return (true);
 	}
+
 	return (false);
 }
