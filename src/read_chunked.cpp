@@ -16,7 +16,6 @@ bool invalid_chunk(URI &rq){
 	size_t	lastLoopIndex = 0;
 	string	readed = rq.getBody();
 
-	cout << "Full Body is ->[" << readed << "]" << std::endl;
 	size = 1;
 	while(size != 0){
 		size_t newLine = readed.find(CRLF, size);
@@ -26,7 +25,6 @@ bool invalid_chunk(URI &rq){
 			return (true);
 		}
 		string sizeStr(readed.begin() + lastLoopIndex, readed.begin() + newLine);
-		cout << "SizeStr is ->[" << sizeStr << "]" << std::endl;
 		std::stringstream	ss(sizeStr);
 		ss >> std::hex >> size;
 		if (ss.fail()){
@@ -36,8 +34,6 @@ bool invalid_chunk(URI &rq){
 		}
 		//Delete first line
 		readed.erase(readed.begin() + lastLoopIndex , readed.begin() + newLine + 2);
-		cout << CYA << "ErasedStr" << EOC << " is ->[\n" << displayHiddenChars(readed) << "]" << std::endl;
-		cout << CYA << "Readed Size" << EOC << " is ->[" << readed.size() << "] and ChunkSize is [" << size << "]" << std::endl;
 		//Delete end CRLF
 		if (size > 0){
 			if (readed.size() < size || readed[size] != '\r' || readed[size + 1] != '\n'){
@@ -56,7 +52,6 @@ bool invalid_chunk(URI &rq){
 			readed.erase(readed.begin() + lastLoopIndex, readed.end());
 		}
 		lastLoopIndex += size;
-		cout << CYA << "ErasedStr After" << EOC << " is ->[\n" << displayHiddenChars(readed) << "]" << std::endl;
 		rq.setBody(readed);
 	}
 	return (false);
@@ -66,10 +61,7 @@ bool read_chunked(int &client, URI &rq){
 	char request[MAXLINE];
 	ssize_t	readed;
 
-
-	cout << CYA << "Enters Chunked" << EOC << std::endl;
 	if (rq.getBody().find(CRLF0x2) == string::npos) {
-		cout << CYA << "Chunked Body" << EOC << std::endl;
 		memset(request, 0, MAXLINE);
 		readed = recv(client, request, sizeof(request), 0);
 		if (readed <= 0){
@@ -95,6 +87,5 @@ bool read_chunked(int &client, URI &rq){
 		}
 		rq.setIsChunked(false);
 	}
-	cerr << RED << "Ends chunked" << EOC << std::endl;	
 	return (false);
 }

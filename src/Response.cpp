@@ -31,39 +31,35 @@ void Response::handleResponse(Server &server, Route &route){
 				errorPages = route.getErrorPages().size() ? route.getErrorPages() : server.getErrorPages();
 				uploadDir = route.getUploadDir();
         if (request->getMethod() == 'g'){
-            std::cout << RED << "IN GET "<< EOC << std::endl;
+            std::cout << YLW << "---GETTING---"<< EOC << std::endl;
             handleGet(server, route);
         }
         else if (request->getMethod() == 'p'){
-            std::cout << RED << "IN POST "<< EOC << std::endl;
+            std::cout << YLW << "---POSTING---"<< EOC << std::endl;
             handlePost(server, route);
         }
         else if (request->getMethod() == 'd'){ 
-            std::cout << RED << "IN DELETE"<< EOC << std::endl;
+            std::cout << YLW << "---DELETING---"<< EOC << std::endl;
             handleDelete(server);
         }
         else {
-            std::cout << RED << "IN EXCEPT"<< EOC << std::endl;
             throw ServerException(STATUS_501);			
 		}
     }
     catch (ServerException & e)
     {
-        std::cout << CYA << "MSGGGGGGGGGGGG>" << e.what() << EOC << std::endl;
         int c;
         std::string strnb = e.what();
         std::stringstream    ss(strnb.substr(0, 3));
         ss >> c;
         request->setStatusCode(strnb);
-				string	msg(e.what());
-        std::cout << CYA << "C is " << c << " for msg ->" << msg << EOC << std::endl;
-				if (errorPages.size() && errorPages.find(c) != errorPages.end()){
-        	std::cout << CYA << "Enteeeerrrrrrrrrrrrrrrrrrrris " << c << EOC << std::endl;
+		string	msg(e.what());
+		if (errorPages.size() && errorPages.find(c) != errorPages.end()){
         	readContent(errorPages[c], e.what());
-				}
-				else {
-    			body = "<!DOCTYPE html><html><h1 align='center'>" + msg + "</h1></html>";
-				}
+		}
+		else {
+            body = "<!DOCTYPE html><html><h1 align='center'>" + msg + "</h1></html>";
+		}
     }
 }
 
@@ -85,8 +81,6 @@ void Response::handleResponse(Server &server, Route &route){
 void Response::handleGet(Server &server, Route const & route)
 {
 		server.getRoot(); //Compile
-
-    std::cout << MAG << "IN GET" << EOC << std::endl;
 		string filePath = request->getPath();
     checkRedirection(route);
     if (route.getAllowListing()){
@@ -94,11 +88,7 @@ void Response::handleGet(Server &server, Route const & route)
         body = generateHtmlListing(files);
         return ;
     }
-
-
     removeConsecutiveChars(filePath, '/');  //Borrar luego
-
-
     if (!route.getCgi().empty())
     {
         Cgi cgi(route, filePath, *request);
@@ -114,11 +104,10 @@ void Response::handleGet(Server &server, Route const & route)
 
 void Response::handlePost(Server &server, Route const & route)
 {
-    std::cout << MAG << "IN POST" << EOC << std::endl;
-		server.getRoot(); //compile
+	server.getRoot(); //compile
     if (!route.getCgi().empty())
     {
-        string filePath = request->getPath(); //getFilePath(server, route);
+        string filePath = request->getPath();
         removeConsecutiveChars(filePath, '/');
         Cgi cgi(route, filePath, *request);
         std::map<string, string> Cgiheaders = cgi.getResponseHeaders();
@@ -132,9 +121,8 @@ void Response::handlePost(Server &server, Route const & route)
 
 void Response::handleDelete(Server &server)
 {
-    std::cout << MAG << "IN DELETE" << EOC << std::endl;
-		server.getRoot(); //for compile
-    string filePath = request->getPath(); //getFilePath(server, route);
+	server.getRoot(); //for compile
+    string filePath = request->getPath();
     removeFileOrDirectory(filePath);
     throw ServerException(STATUS_204);
 }
@@ -157,7 +145,6 @@ size_t	setStatusNb(string &code){
 	int 							result		= 0;
 	std::stringstream	ss(strNb);
 	ss >> result;
-	cout << "RRRRRRRRResult -> " << result << std::endl;
 	if (ss.fail() || result < 400 || result > 599){
 		return 0;
 	}
@@ -188,30 +175,24 @@ string	add_error_page_response(string &filePath, string &code){
 
 void Response::readContent(string const &filePath, string code)
 {
-		size_t	statusNb = 0;
+	size_t	statusNb = 0;
 
-    std::cout << CYA << "Enters Read Content" << filePath << " <---readContent(string const &filePath, string code)" << EOC << std::endl;
-		if (filePath.size() && filePath.at(filePath.size() -1) == '/'){
-    	code = code == STATUS_200 ? STATUS_404 : code;
-			statusNb = setStatusNb(code);
-    	std::cout << CYA << "Status Nb is " << statusNb << EOC << std::endl;
-			if (errorPages.size() && errorPages.find(statusNb) != errorPages.end()){
-    		std::cout << CYA << "Going to set ERR PAGEE!!" << EOC << std::endl;
-				body = add_error_page_response(errorPages[statusNb], code);
-			}
-			else{
-    		body = "<!DOCTYPE html><html><h1 align='center'>" + code + "</h1></html>";
-			}
-			return ;
-		}
+	if (filePath.size() && filePath.at(filePath.size() -1) == '/'){
+    code = code == STATUS_200 ? STATUS_404 : code;
+	statusNb = setStatusNb(code);
+	if (errorPages.size() && errorPages.find(statusNb) != errorPages.end()){
+		body = add_error_page_response(errorPages[statusNb], code);
+	}
+	else{
+	body = "<!DOCTYPE html><html><h1 align='center'>" + code + "</h1></html>";
+	}
+	return ;
+	}
     std::ifstream file(filePath);
-    //std::cout << CYA << "FILEPATH IS : " << filePath << " <---readContent(string const &filePath, string code)" << EOC << std::endl;
-
 	if (file.is_open())
     {
         headers["Content-Type"] = mime[Cgi::getFileExt(filePath)];
-    		//std::cout << CYA << "Content TYpe is->" << headers["Content-Type"] << EOC << std::endl;
-				std::stringstream buffer;
+		std::stringstream buffer;
         string line;
         while (std::getline(file, line))
             buffer << line << std::endl;
@@ -221,17 +202,13 @@ void Response::readContent(string const &filePath, string code)
     else
     {
         code = code == STATUS_200 ? STATUS_404 : code;
-    		std::cout << CYA << "Code before SetStatus" << code << EOC << std::endl;
-				statusNb = setStatusNb(code);
-
-    		std::cout << CYA << "Second Status Nb is " << statusNb << EOC << std::endl;
-				if (errorPages.size() && errorPages.find(statusNb) != errorPages.end()){
-    			std::cout << CYA << "Going to set ERR PAGEE!!" << EOC << std::endl;
-					body = add_error_page_response(errorPages[statusNb], code);
-				}
-				else{
-					body = "<!DOCTYPE html><html><h1 align='center'>" + code + "</h1></html>";
-				}
+		statusNb = setStatusNb(code);
+		if (errorPages.size() && errorPages.find(statusNb) != errorPages.end()){
+			body = add_error_page_response(errorPages[statusNb], code);
+		}
+		else{
+			body = "<!DOCTYPE html><html><h1 align='center'>" + code + "</h1></html>";
+		}
     }
 }
 
@@ -260,7 +237,6 @@ string Response::tryFiles(Server const & server, Route const & route, string & r
         }
         file.close();
     }
-    //std::cout << CYA << "FILEPATH IS : " << filePath << " <---tryFiles(Server const & server, Route const & route, string & root)" << EOC << std::endl;
     if (route.getRouteType() != Route::FILE)
     {
         throw ServerException(STATUS_403);
@@ -288,7 +264,6 @@ void Response::processUrlEncodedBody(const string& body)
     std::map<string, string> queryStrings;
     vector<string> params = ft_split(body, "&");
 
-    std::cout << RED << "DOING URL ENCODED--- " << EOC << std::endl;
     for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it)
     {
         vector<string> param = ft_split(*it, "=");
@@ -303,28 +278,19 @@ void Response::processUrlEncodedBody(const string& body)
 
 void Response::processFileUpload(std::istringstream& ss, const string& name)
 {
-		std::cout << MAG << "UPLOAAAAAAAAAD {{{{{{{" << name << EOC << std::endl;
     std::ofstream file(name.c_str());
     if (!file.is_open()) {
-			std::cerr << RED << "Error uploading file!" << EOC << std::endl;
         throw ServerException(STATUS_500);
     }
     string content;
-    //std::getline(ss, content);
-    //std::getline(ss, content);
     while (std::getline(ss, content))
         file << content << "\n";
-
-		//Crete a file
-		file.close();
+	file.close();
 }
 
 void Response::processFormField(std::istringstream& ss, const string& name, std::map<string, string>& queryStrings)
 {
-		std::cout << MAG << "Procesing FFFFFFFFFFFFFFFForm field" << EOC << std::endl;
     string content;
-    //std::getline(ss, content);
-    //std::getline(ss, content);
     std::getline(ss, content, '\0');
     queryStrings[name] = content;
 }
@@ -347,18 +313,13 @@ void Response::processMultipartFormDataBody(const string& body, Route const & ro
 {
     std::map<string, string> queryStrings;
     string boundary = request->getBoundary();
-    //vector<string> params = ft_split(body, "--" + boundary);
 
-    std::cout << RED << "doing multipart--- with boundary[" << boundary << "]" << EOC << std::endl;
 
 		string bod = body;
-		std::cout << RED << "--- Body in multipart isssss[" << displayHiddenChars(bod) << "]" << EOC << std::endl;
 		if (body.find(CRLFx2) == string::npos){
-			std::cout << RED << "Error: multipart CRLFx2 not found" << EOC << std::endl;
 			throw ServerException(STATUS_400);
 		}
 		string	contentBody = body.substr(body.find(CRLFx2) + 4);
-		std::cout << RED << "--- ContentBody in multipart isssss[" << displayHiddenChars(contentBody) << "]" << EOC << std::endl;
 		std::istringstream ss(contentBody);
 		if (body.find("filename") != string::npos){
 				processFileUpload(ss, getFileName(body, route, 10, "filename", true));
@@ -382,17 +343,15 @@ void Response::readBody(Route const & route)
 		const vecStr	&contentType = headers[CONTENT_TYPE_H];
 
     const string& body = request->getBody();
-    
-    //std::cout << RED << "Content Type is->[" << contentType[0] << "]" << EOC << std::endl;
     if (contentType.size() && contentType[0] == "application/x-www-form-urlencoded")
-        processUrlEncodedBody(body);		//Mirar cuándo ocurre estoo
+        processUrlEncodedBody(body);
     else if (contentType.size() && contentType[0] == "multipart/form-data")
         processMultipartFormDataBody(body, route);
-		else
-		{
-				std::istringstream ss(body);
-				processFileUpload(ss, resolveFileName());
-		}
+	else
+	{
+		std::istringstream ss(body);
+		processFileUpload(ss, resolveFileName());
+	}
 }
 
 

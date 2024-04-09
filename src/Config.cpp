@@ -58,6 +58,8 @@ bool getPathMatch(Server &server, std::string path)
 	}
     return (pathMatch);
 }
+
+
 Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, std::stack<state> &stateStack)
 {
     stateStack.push(SERVER);
@@ -92,12 +94,13 @@ Server Config::parseServer(std::ifstream &file, std::string &line, int &lineNb, 
             throw ServerException("Route block not opened", lineNb);
         else if (line.find("=") == std::string::npos)
             throw ServerException("Invalid server block", lineNb);
-        // else
-        //     throw ServerException("Invalid server block", lineNb);
         server.fill(line, lineNb);
-    }
-	server.print();
-  return (server);
+		}
+		if (server.getHost() == 0 || server.getPort() == -1 || server.getClientMaxBodySize() == 0){
+			throw ServerException("Invalid server block", lineNb);
+		}
+		server.print();
+		return (server);
 }
 
 Route Config::parseRoute(std::ifstream &file, std::string &line, int &lineNb, std::stack<state> &stateStack)
@@ -166,15 +169,3 @@ Config::iterator Config::end()
 {
 	return (servers.end());
 }
-
-/*
-Config::iterator Config::find(const std::string& host, int port){
-	for (iterator it = servers.begin(); it != servers.end(); ++it) {
-			std::vector<std::string> sNames = it->getServerNames();
-			if ((host == it->getHost() || std::find(sNames.begin(), sNames.end(), host) != sNames.end()) && it->getPort() == port) {
-					return it;
-			}
-	}
-	return servers.end(); 
-}
-*/

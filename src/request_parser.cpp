@@ -14,7 +14,6 @@
 using	std::cout;
 
 bool	invalid_request(URI &rq, Server &server){
-	cout << RED << ";;;;;;;;;;;;;;;;;;; PARSING HEADERS!!! ;;;;;;;;; " << EOC << std::endl;
 	if (rq.getRequest().size() < 1){
 		cout << RED << "Server Error: Couldn't read the request" << EOC << std::endl;
 		rq.setStatusCode(STATUS_500);

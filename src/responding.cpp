@@ -11,7 +11,6 @@
 
 #define	CRLF					"\r\n"
 #define	CRLFx2				"\r\n\r\n"
-// #define	DEFAULT_INDEX	"index.html"
 
 
 bool	responding_when_error(int &client, Server &server, URI &rq){
@@ -40,11 +39,10 @@ void	changePath(Server &server, URI &rq, Route &route, bool fullMatch){
 		route.setAllowListing(route.getAllowListing());
 	else
 		route.setAllowListing(server.getAllowListing());
-	//cerr << RED << "Change Path Allow Listing is ->" << route.getAllowListing() << EOC << std::endl;
 
 	//Redirect
 	if (route.getRedirect().size()){
-		rq.setPath(route.getRedirect());	//Setear status code a 301??
+		rq.setPath(route.getRedirect());
 	}
 
 	//Root
@@ -123,8 +121,6 @@ void respond_connection(int &client, Server &server, URI &rq){
 		return ;
 	}
 
-	cout << MAG << "Route Resolveee->[" << server.getRoutes()[routeInd].getPath() << "]" << EOC << std::endl;
-
 	Response	response(rq);
 	rq.setStatusCode(STATUS_200);
 
@@ -152,18 +148,15 @@ void	add_error_status_code_msg(string &response, URI &rq){
 	}
 	string	msg = code.substr(4, code.size());
 	msg += CRLF;
-	cout << CYA << "MSG +++++++>>>[" << msg << "]" << EOC << std::endl;
 	response += "Content-Type: text/plain\r\n";
 	response += "Content-Lenght: ";
 	string	strSize = std::to_string(msg.size());
 	response += strSize;
 	response += CRLFx2;
 	response += msg;
-	cout << CYA << "RESPONSE+++++++>>>[" << response << "]" << EOC << std::endl;
 }
 
 void	add_error_page_response(string &response, string &filePath, URI &rq){
-	cout << CYA << "PATH+++++++>>>[" << filePath << "]" << EOC << std::endl;
 	std::ifstream file(filePath);
 
 	if (file.is_open())
@@ -185,7 +178,6 @@ void	add_error_page_response(string &response, string &filePath, URI &rq){
 		response += body.size();
 		response += CRLFx2;
 		response += body;
-		cout << CYA << "RESPONSE+++++++>>>[" << response << "]" << EOC << std::endl;
 	}
 	else{
 		add_error_status_code_msg(response, rq);
@@ -206,12 +198,10 @@ void	fill_4xx_5xx_response(string &response, URI &rq, Server &server){
 		return (add_error_status_code_msg(response, rq));
 	}
 
-	cout << CYA << "RQ_PATH+++++++>>>[" << rq.getPath() << "]" << EOC << std::endl;
 	vector<Route>	routes = server.getRoutes();
 	for (vector<Route>::iterator it = routes.begin(); it != routes.end(); ++it){
 		if (it->getPath() != rq.getRouteFound()) continue ;
 		if (it->getErrorPages().find(nb) != it->getErrorPages().end()){
-			cout << CYA << "ERR PAGE IN PATH++++++" << EOC << std::endl;
 			return ( add_error_page_response(response, (it->getErrorPages())[nb], rq) );
 		}
 	}
@@ -219,7 +209,6 @@ void	fill_4xx_5xx_response(string &response, URI &rq, Server &server){
 
 	mapIntStr	errPages = server.getErrorPages();
 	if (errPages.find(nb)  != errPages.end()){
-		cout << CYA << "ERR PAGE IN SERVER++++++SIZE:" << server.getErrorPages().size() << EOC << std::endl;
 		return ( add_error_page_response(response, (server.getErrorPages())[nb], rq) );
 	}
 	return (add_error_status_code_msg(response, rq));
@@ -232,27 +221,6 @@ void check_body_size(Server &server, URI &rq){
 	bool				multipart_h		= false;
 	bool				length_h			= false;
 	mapStrVect	hdrs					= rq.getHeaders();
-
-
-	/*
-	cout << CYA << "\n\n\n*********HEADERS*************" << EOC << std::endl << std::endl;
-	for (mapStrVect::iterator	it = hdrs.begin(); it != hdrs.end(); ++it){
-	
-		cout << CYA << "Key->[" << it->first << "]" << EOC << std::endl << std::endl;
-
-		cout << CYA << "Vals->[" ;
-		for (vector<string>::iterator jt = it->second.begin(); jt != it->second.end(); ++jt){
-			cout << *jt << " , ";
-		}
-		cout << "]" << EOC << std::endl << std::endl;
-	}	
-	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;
-	*/
-
-	cout << CYA << "\n\n\n*********CHECKING BODY SIZE*************" << EOC << std::endl;
-	cout << CYA << "Body Size is ->" << bodySize << EOC << std::endl;
-	cout << CYA << "Body is ->[" << EOC << rq.getBody() << CYA << "]"<< EOC << std::endl;
-	cout << CYA << "Max is ->[" << EOC << max << CYA << "]"<< EOC << std::endl;
 
 	if (rq.getStatusCode().size()){
 		return ;

@@ -84,7 +84,6 @@ std::string Cgi::getQuery(URI const & req)
 			query += "&";
 		++ind;
 	}
-	std::cerr << RED << "QUERY IS ------>" << query << EOC << std::endl;
 	return (query);
 }
 

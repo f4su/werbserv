@@ -9,7 +9,6 @@ bool CheckInDirectory(string &path)
 		else if (path.size() && path[0] != '/' && path[0] != '.')
         path = "./" + path;
 
-    std::cerr << MAG << "QUE PATH ES ESTE -----------> " << path << EOC << std::endl;
     DIR* dir = opendir(path.c_str());
     if (dir != NULL) {
         closedir(dir);

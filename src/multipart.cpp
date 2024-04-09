@@ -26,8 +26,6 @@ bool invalid_multipart(URI &rq, string &boundaryStart, string &boundaryEnd){
 	while (std::getline(ss, line)){
 		if (lineInd == 0 && line != boundaryStart){
 
-			cout << RED << "BoundaryStart is: [" << displayHiddenChars(boundaryStart) << "]" << EOC << std::endl;
-			cout << RED << "Line is: [" << displayHiddenChars(line) << "]" << EOC << std::endl;
 			rq.setStatusCode(STATUS_400);
 			cout << RED << "Error: Invalid Multipart start" << EOC << std::endl;
 			return (true);
@@ -38,14 +36,11 @@ bool invalid_multipart(URI &rq, string &boundaryStart, string &boundaryEnd){
 		++lineInd;
 	}
 	if (lineInd != endInd + 1){
-		cout << RED << "BoundaryEnd is: [" << displayHiddenChars(boundaryEnd) << "]" << EOC << std::endl;
-		cout << RED << "Line is: [" << displayHiddenChars(line) << "]" << EOC << std::endl;
 		rq.setStatusCode(STATUS_400);
 		cout << RED << "Error: Invalid Multipart end" << EOC << std::endl;
 		return (true);
 	}
 	boundaryStart += "\n";
-	cout << RED << "Going to split by: [" << displayHiddenChars(boundaryStart) << "]" << EOC << std::endl;
 	vecStr	multiparts = ft_split_by_string(body, boundaryStart );
 	if (multiparts.size() == 0){
 		rq.setStatusCode(STATUS_500);
@@ -60,15 +55,12 @@ bool invalid_multipart(URI &rq, string &boundaryStart, string &boundaryEnd){
 		return (true);
 	}
 	else{
-		cout << RED<< "--Striping --" << std::endl;
 		multiparts[multiparts.size() - 1] = multiparts[multiparts.size() - 1].substr(0, pos);
 	}
 
 	string	allMultiparts;
-	cout << RED<< "Multipar 0 size is [" << multiparts[0].size() << "] and total size is [" << multiparts.size() << "]" << std::endl;
 	size_t index = 0;
 	for (vecStr::iterator it = multiparts.begin(); it != multiparts.end(); ++it){
-		cout << RED<< "Multipar " << index << " line is+++++++>[" << 	displayHiddenChars(multiparts[index]) << std::endl << "]" << std::endl;
 		if (it->size())
 			allMultiparts += *it;
 		++index;
@@ -84,9 +76,7 @@ bool read_multipart(int &client, URI &rq){
 	ssize_t	readed;
 
 
-	cout << CYA << "Enters Multipart" << EOC << std::endl;
 	if (rq.getBody().find(boundaryEnd) == string::npos) {
-		cout << CYA << "Multipart Body" << EOC << std::endl;
 		memset(request, 0, MAXLINE);
 		readed = recv(client, request, sizeof(request), 0);
 		if (readed <= 0){
@@ -105,8 +95,6 @@ bool read_multipart(int &client, URI &rq){
 		}
 		tmp.clear();
 	}
-
-	//cout << MAG << "Body is+++++++>[" << 	rq.getBody() << std::endl << "]" << std::endl;
 	if (rq.getBody().find(boundaryEnd) != string::npos) {
 		if (invalid_multipart(rq, boundaryStart += "\r", boundaryEnd += "\r")){
 			cerr << RED << "Error: Invalid multipart" << EOC << std::endl;
@@ -115,6 +103,5 @@ bool read_multipart(int &client, URI &rq){
 		rq.setContentLength(rq.getBody().size());
 		rq.setIsMultipart(false);
 	}
-	cerr << RED << "Ends Multipart" << EOC << std::endl;	
 	return (false);
 }

@@ -50,10 +50,6 @@ std::string displayHiddenChars(string& str) {
                 result += "\\n";
 								cout << line++ << "\t" << result;
 								cout << std::endl;
-								/*
-								if (result.size() < 20){
-										cout << RED << "->Chunk count: " << ++chunk_counts << EOC << std::endl;
-								}*/
 								result.clear();
                 break;
             case '\t':
@@ -90,7 +86,7 @@ void	calculate_max(vector<Server> &servers){
 		cout << MAG << "Socket---->" << it->getSocket() << EOC << std::endl;
 		if (!it->getClients().empty()){
 			vector<int> clients = it->getClients();
-			cout << MAG << "CLieeents---->" << EOC << std::endl;
+			cout << MAG << "Clients---->" << EOC << std::endl;
 			printContainer(clients);
 			for (vector<int>::iterator jt = clients.begin(); jt != clients.end(); ++jt){
 				if (*jt > max){
@@ -99,7 +95,6 @@ void	calculate_max(vector<Server> &servers){
 			}
 		}
 	}
-	cout << MAG << "CALCULATING MAX END---->" << EOC << std::endl;
 	servers[0].setMax(max);
 }
 

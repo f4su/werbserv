@@ -12,6 +12,7 @@
 #define RED "\033[1;31m"
 #define CYA	"\033[36m"
 #define MAG	"\033[1;35m"
+#define YLW "\033[1;33m"
 #define EOC	"\033[0m"
 
 using	std::string;

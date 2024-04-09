@@ -29,7 +29,6 @@ vector<string> unite_tokens_between_commas(vector<string> &tokens){
 
 	for (vector<string>::iterator	it = tokens.begin(); it != tokens.end(); ++it){
 		count = count_chars(*it, '"');
-		//cout << CYA << "It = [" << *it << "] index->" << index << " and count ->" << count << EOC << std::endl;
 		if (count > 0 && count % 2 != 0 && index > 0){
 			if (firstTime){
 				start = index;
@@ -39,7 +38,6 @@ vector<string> unite_tokens_between_commas(vector<string> &tokens){
 				end = index;
 				firstTime = true;
 			}
-			//cout << CYA << "Start = [" << start << "] end->" << end << EOC << std::endl;
 			if (start > 0 && end > 0 && end > start){
 				for (size_t i = start; i <= end && end <= tokens.size(); ++i){
 					result += jt[i];
@@ -47,7 +45,6 @@ vector<string> unite_tokens_between_commas(vector<string> &tokens){
 						result += " ";
 					}
 				}
-				//cout << CYA << "****-> Result is ->" << result << EOC << std::endl;
 				line.push_back(result);	
 				result.clear();
 				start = 0;
@@ -101,10 +98,6 @@ bool	check_headers_values(URI &rq, Server &server){
 		values = hdrs[it->first];
 		key = it->first;
 		if (valid_hdrs.find(it->first) == string::npos) continue ;
-		if (key == CONTENT_TYPE_H){
-			cout << MAG << "val~~~~~~~~~~" <<  hdrs[CONTENT_TYPE_H][0]  << EOC << std::endl;
-		}
-
 		if (key == TRANSFER_ENCODING_H){
 				if (find(values.begin(), values.end(), "chunked") != values.end()){
 					rq.setIsChunked(true);
@@ -138,7 +131,6 @@ bool	check_headers_values(URI &rq, Server &server){
 						return (true);
 					}
 					rq.setPort(port);
-					//cout << RED << "Port: [" << rq.getPort() << "]" << EOC << std::endl; 
 				}
 				else {
 					rq.setHost(values[0]);
@@ -154,12 +146,10 @@ bool	check_headers_values(URI &rq, Server &server){
 		}
 
 		else if (key == CONTENT_TYPE_H && hdrs[CONTENT_TYPE_H][0] == "multipart/form-data"){
-			cout << CYA << "Setting Boooooooooooooooooooooooooooundary" << EOC << std::endl;
 			if ( hdrs[CONTENT_TYPE_H].size() == 1 || hdrs[CONTENT_TYPE_H][1].find("=") ==  string::npos){
 				rq.setStatusCode(STATUS_400);
 				return (true);
 			}
-			cout << CYA << "Setting Boooooooooooooooooooooooooooundary2222" << EOC << std::endl;
 			rq.setBoundary(hdrs[CONTENT_TYPE_H][1].substr( hdrs[CONTENT_TYPE_H][1].find("=") + 1));
 			rq.setIsMultipart(true);
 		}
@@ -193,8 +183,7 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 	vector<string>											values, line;
 	vector<vector<string> >::iterator		it;
 	string															key;
-
-	cout << RED << "Starting Headers Parse" << EOC << std::endl; 
+ 
 	for (it = tokens.begin(); it != tokens.end() && index++ <= rq.getHeadersSize(); ++it){
 		if (it == tokens.begin() || it->size() < 1){
 			continue ;
@@ -259,20 +248,6 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 			key.clear();
 	}
 
-
-	/*cout << CYA << "\n\n\n*********HEADERS*************" << EOC << std::endl << std::endl;
-	for (mapStrVect::iterator	it = hdrs.begin(); it != hdrs.end(); ++it){
-	
-		cout << CYA << "Key->[" << it->first << "]" << EOC << std::endl << std::endl;
-
-		cout << CYA << "Vals->[" ;
-		for (vector<string>::iterator jt = it->second.begin(); jt != it->second.end(); ++jt){
-			cout << *jt << " , ";
-		}
-		cout << "]" << EOC << std::endl << std::endl;
-	}	
-	cout << CYA << "\n\n\n*********HEADERS END*************" << EOC << std::endl;*/
-
 	if (hdrs.size() == 0){
 		cout << RED << "Error when storing the headers" << EOC << std::endl; 
 		rq.setStatusCode(STATUS_500);
@@ -283,6 +258,5 @@ bool invalid_header(vector<vector<string> > &tokens, URI &rq, Server &server)
 		cout << RED << "Error on headers values" << EOC << std::endl; 
 		return (true);
 	}
-	//transfer_encoding(rq);
 	return (false);
 }

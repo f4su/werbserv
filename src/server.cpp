@@ -2,7 +2,7 @@
 #include "../inc/ServerException.hpp"
 #include "../inc/Utils.hpp"
 
-#define DEFAULT_ROOT	"/var/www/html"
+#define DEFAULT_ROOT	"www"
 #define MAG						"\033[1;35m"
 #define EOC						"\033[0m"
 #define CYA						"\033[36m"

@@ -130,7 +130,7 @@ void read_connection(int &client, Server &server, URI &rq){
 		readed = recv(client, request, sizeof(request), 0);
 		if (readed <= 0){
 			if (readed == 0){
-				cerr << CYA << "Connection closed by client (" << client << " fd)" << EOC << std::endl;	// No puede haber una lectura que sea 0 ??
+				cerr << CYA << "Connection closed by client (" << client << " fd)" << EOC << std::endl;
 			}
 			else {	
 				cerr << RED << "Error: Couldn't read from client (" << client << " fd)" << EOC << std::endl;
@@ -154,7 +154,6 @@ void read_connection(int &client, Server &server, URI &rq){
 		if (rq.getRequest().size() > crlf + 4){
 			string body = rq.getRequest().substr(crlf + 4, rq.getRequest().size());
 			rq.setBody(body);
-			//cout << CYA << "Body is+++++++>[" << 	rq.getBody() << std::endl << "]" << std::endl;
 		}
 		parse_rq(client, server, server.getClientUri().at(client)); 
 	}
@@ -162,7 +161,6 @@ void read_connection(int &client, Server &server, URI &rq){
 
 void parse_rq(int &client, Server &server, URI &rq){
 	if (rq.getHeadersParsed() == false && invalid_request(rq, server)){
-		cout << RED << "/JOSEEEEEEE//////////STATUS CODE----> " << rq.getStatusCode()<< EOC << std::endl;
 		cout << RED << "Error: Invalid request on server " << server.getPort() << " from client " << client << EOC << std::endl;
 		rq.setGoingToResponse(true);
 		return ;
@@ -186,7 +184,6 @@ void parse_rq(int &client, Server &server, URI &rq){
 			return ;
 		}
 	}
-	cout << RED << "Coooooooooooooooontent Length ========>" << rq.getBody().size() << EOC << std::endl;
 	if (rq.getIsChunked() == false && rq.getIsMultipart() == false &&
 			(rq.getContentLength() == -1 || static_cast<size_t>(rq.getContentLength()) == rq.getBody().size())){
 		rq.setGoingToResponse(true);

@@ -6,13 +6,6 @@
 
 int main(int argc, char **argv) 
 {
-	//DEBUG REQUEST PARSER TESTING - Remove before delivery!!!!
-	/*
-	if (argc == 2 && argv[1][0] == 'z'){
-		request_testing();
-		return (0);
-	}*/
-
 	std::string cnfPth;
 	argc == 1 ? cnfPth = "./test" : argc == 2 ? cnfPth = argv[1] : cnfPth = nullptr;
 	try {

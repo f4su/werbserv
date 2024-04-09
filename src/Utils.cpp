@@ -92,7 +92,6 @@ void trimTrailingSlashes(std::string & s)
 std::vector<std::string> getFilesInDirectory(std::string & reqPath)
 {
     std::vector<std::string> files;
-    std::cerr << MAG << "FILEPATH IS--->" << reqPath << EOC << std::endl;
     if (CheckInDirectory(reqPath) == false)
         throw ServerException(STATUS_404);
     
